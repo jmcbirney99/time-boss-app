@@ -1,0 +1,116 @@
+# User Personas
+
+> Copy this file to your project as `context/PERSONAS.md` and fill it in.
+> This helps Claude understand your users when running PM commands.
+
+---
+
+## Primary Persona: [Name]
+
+### Demographics
+- **Role/Title:** [Job title or role]
+- **Industry:** [Industry or context]
+- **Experience Level:** [Junior/Mid/Senior/Executive]
+- **Age Range:** [Optional - if relevant]
+
+### Goals
+What are they trying to accomplish?
+1. [Primary goal]
+2. [Secondary goal]
+3. [Tertiary goal]
+
+### Pain Points
+What frustrates them today?
+1. **[Pain point 1]:** [Description]
+2. **[Pain point 2]:** [Description]
+3. **[Pain point 3]:** [Description]
+
+### Behaviors
+How do they work?
+- [Behavior 1 - e.g., "Checks email first thing every morning"]
+- [Behavior 2 - e.g., "Prefers mobile over desktop"]
+- [Behavior 3 - e.g., "Often works in meetings"]
+
+### Quote
+> "[A quote that captures how they think or feel about the problem you solve]"
+
+### Day in the Life
+[2-3 sentences describing a typical day and where your product fits in]
+
+### Success Metrics
+How do they measure their own success?
+- [Metric 1]
+- [Metric 2]
+
+### Tools They Use
+- [Tool 1] - [What they use it for]
+- [Tool 2] - [What they use it for]
+
+---
+
+## Secondary Persona: [Name]
+
+### Demographics
+- **Role/Title:** [Job title or role]
+- **Industry:** [Industry or context]
+- **Experience Level:** [Junior/Mid/Senior/Executive]
+
+### Goals
+1. [Primary goal]
+2. [Secondary goal]
+
+### Pain Points
+1. **[Pain point 1]:** [Description]
+2. **[Pain point 2]:** [Description]
+
+### Key Difference from Primary
+[What makes this persona different and why they matter]
+
+### Quote
+> "[A quote that captures their perspective]"
+
+---
+
+## Anti-Persona: [Name]
+
+> Who is NOT our target user? Being explicit helps focus.
+
+### Who They Are
+[Description of users we're NOT building for]
+
+### Why They're Not a Fit
+- [Reason 1]
+- [Reason 2]
+
+### What They Need Instead
+[What product/solution would actually serve them]
+
+---
+
+## Persona Comparison
+
+| Attribute | [Primary] | [Secondary] | [Anti-Persona] |
+|-----------|-----------|-------------|----------------|
+| Main goal | [Goal] | [Goal] | [Goal] |
+| Top pain point | [Pain] | [Pain] | [Pain] |
+| Tech savviness | [Level] | [Level] | [Level] |
+| Willingness to pay | [Level] | [Level] | [Level] |
+| Our fit | ✅ Primary | ✅ Secondary | ❌ Not a fit |
+
+---
+
+## Research Sources
+
+Where did these personas come from?
+- [X] User interviews ([Number] interviews)
+- [X] Survey data ([Number] responses)
+- [X] Analytics/behavioral data
+- [X] Support ticket analysis
+- [X] Sales conversation insights
+
+**Last validated:** [Date]
+
+---
+
+*Last updated: [Date]*
+*Owner: [Name]*

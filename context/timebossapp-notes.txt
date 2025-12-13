@@ -1,0 +1,32 @@
+I want to create a personal to do list app that solves one problem at the very least: helps me know exactly what my capacity is to accomplish a set of tasks, so I don't over commit or think I can do more than I have time for. 
+
+capacity-aware task engine
+“Given everything on my plate and my calendar, what can I actually get done, and when?”
+
+Key insight: saying "yes" to something is fundamentally saying "no" to something else... BUT it's tough to know WHAT we are saying no to in any given moment if we haven't planned what we want that chunk of time to explicitly go to 
+
+e.g. if I want to go on vacation, but haven't done the work to break down the tasks to make that happen then schedule when to do each task, I will keep doing other things with my time until I am confronted with the fact that I'm not making progress on my vacation planning goal while each day the prices for travel in crease as ti gets closer to the date I intended to take the trip 
+
+I need help facing the fact that I have competing priorities and I want to be forced to make decisions weekly about what I DO and DON'T want to make progress on this week 
+
+Right now running the time boss process to get to this vivid moment that requires decision just requires too much friction for me right now 
+
+
+
+Key insight: to do list and calendar are the same 
+- every task on the to do list should have an estimate for how long it will take 
+- user should see each task on their calendar, next to any meetings or any other items 
+- the process to put tasks on the calendar should follow: 1) add a task "idea" 2) break down that task into 30 minute increments at most / break down into component parts and sequence them in order (much like an llm does with chain of thought reasoning) 3) estimate each subtask and total the estimate for the task 4) task get's moved from a "backlog" that's not represented on the calendar anywhere to some actual date and time so user can see the task on their calendar 
+
+I don't know what the technology should be, help me add more details and context to this 
+
+Inspiration based on this framework: see "time-boss-overview.txt" 
+
+
+-- 
+
+Great, here is a specific tweak for this interface on desktop vs mobile. mobile: let's make mobile only show
+  this two column segment then if user clicks one of the days the "timeline" view for that day slides over from
+  the right to take up the full screen with a dismissable "x" to get back to the two column view so  the user
+  can drag that task to the right spot on that day  [Image #1]
+

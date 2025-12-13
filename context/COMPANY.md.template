@@ -1,0 +1,153 @@
+# Company Context
+
+> Copy this file to your project as `context/COMPANY.md` and fill it in.
+> This helps Claude understand your company context when running PM commands.
+
+---
+
+## Company Overview
+
+**Company:** [Company Name]
+**Industry:** [Industry]
+**Stage:** [Seed / Series A / Series B / Growth / Public]
+**Size:** [Number of employees]
+**Founded:** [Year]
+
+### Mission
+[Company mission statement - why you exist]
+
+### Vision
+[Where you're heading - the future you're building toward]
+
+---
+
+## Current Strategy
+
+### Annual/Quarterly Theme
+**[Theme name]:** [Description]
+
+### Company OKRs (Current Period)
+
+**Objective 1:** [Objective]
+- KR1: [Key result with target]
+- KR2: [Key result with target]
+- KR3: [Key result with target]
+
+**Objective 2:** [Objective]
+- KR1: [Key result with target]
+- KR2: [Key result with target]
+
+### Strategic Priorities
+1. **[Priority 1]:** [Why this matters now]
+2. **[Priority 2]:** [Why this matters now]
+3. **[Priority 3]:** [Why this matters now]
+
+### What We're NOT Focusing On
+- [Deprioritized area 1] - [Why not now]
+- [Deprioritized area 2] - [Why not now]
+
+---
+
+## Key Stakeholders
+
+### Leadership Team
+
+| Name | Role | Cares About | Communication Style |
+|------|------|-------------|---------------------|
+| [Name] | CEO | [Priorities] | [Style notes] |
+| [Name] | CTO | [Priorities] | [Style notes] |
+| [Name] | CPO | [Priorities] | [Style notes] |
+| [Name] | CFO | [Priorities] | [Style notes] |
+
+### Your Team
+
+| Name | Role | Responsibilities |
+|------|------|------------------|
+| [Name] | [Role] | [What they do] |
+| [Name] | [Role] | [What they do] |
+
+### Key Cross-Functional Partners
+
+| Team | Key Contact | When to Involve |
+|------|-------------|-----------------|
+| Engineering | [Name] | [Situations] |
+| Design | [Name] | [Situations] |
+| Marketing | [Name] | [Situations] |
+| Sales | [Name] | [Situations] |
+| Customer Success | [Name] | [Situations] |
+
+---
+
+## Business Context
+
+### Revenue/Funding
+- **ARR/Revenue:** [Amount or range]
+- **Runway:** [If relevant]
+- **Growth rate:** [Percentage]
+
+### Key Business Metrics
+
+| Metric | Current | Target | Trend |
+|--------|---------|--------|-------|
+| [Metric 1] | [Value] | [Target] | [↑↓→] |
+| [Metric 2] | [Value] | [Target] | [↑↓→] |
+| [Metric 3] | [Value] | [Target] | [↑↓→] |
+
+### Customer Base
+- **Total customers:** [Number]
+- **Target segment:** [Description]
+- **Top customers:** [Names if relevant]
+
+---
+
+## Culture & Norms
+
+### Values
+1. **[Value 1]:** [What it means in practice]
+2. **[Value 2]:** [What it means in practice]
+3. **[Value 3]:** [What it means in practice]
+
+### Decision-Making
+- **How decisions are made:** [Process]
+- **Who has authority for what:** [Guidelines]
+- **How to escalate:** [Process]
+
+### Communication Norms
+- **All-hands:** [Frequency]
+- **Team syncs:** [Frequency]
+- **Documentation:** [Where things live - Notion, Confluence, etc.]
+- **Async vs sync preference:** [Culture]
+
+---
+
+## Tools & Systems
+
+| Category | Tool | Notes |
+|----------|------|-------|
+| Project Management | [Tool] | [How it's used] |
+| Documentation | [Tool] | [How it's used] |
+| Communication | [Tool] | [How it's used] |
+| Analytics | [Tool] | [How it's used] |
+| Design | [Tool] | [How it's used] |
+| Engineering | [Tool] | [How it's used] |
+
+---
+
+## Important Context
+
+### Recent Events
+- [Event 1] - [Impact/context]
+- [Event 2] - [Impact/context]
+
+### Upcoming Events
+- [Event 1] - [Date] - [Relevance]
+- [Event 2] - [Date] - [Relevance]
+
+### Sensitivities
+- [Topic to be careful about] - [Why]
+- [Topic to be careful about] - [Why]
+
+---
+
+*Last updated: [Date]*
+*Owner: [Name]*

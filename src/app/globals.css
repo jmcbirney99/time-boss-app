@@ -3,21 +3,180 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #fafaf9;
+  --foreground: #292524;
+  --sage: #84a98c;
+  --sage-light: #a8c5a5;
+  --sage-dark: #6b8b73;
+  --coral: #f4a89a;
+  --paper-border: #e7e5e4;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  /* Whirlwind stripe pattern - softer warm grays */
+  .bg-whirlwind {
+    background: repeating-linear-gradient(
+      45deg,
+      #fafaf9,
+      #fafaf9 10px,
+      #f5f5f4 10px,
+      #f5f5f4 20px
+    );
+  }
+
+  /* Calendar time slot */
+  .time-slot {
+    @apply h-[60px] border-b border-paper-border relative;
+  }
+
+  .time-slot:last-child {
+    @apply border-b-0;
+  }
+
+  /* Drag over highlight - sage green */
+  .drop-target-active {
+    @apply ring-2 ring-sage-400 ring-inset bg-sage-50;
+  }
+
+  /* Backlog card - softer shadows */
+  .backlog-card {
+    @apply bg-white rounded-2xl border border-paper-border p-4
+           shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing;
+  }
+
+  .backlog-card.dragging {
+    @apply opacity-50 shadow-lg scale-105;
+  }
+
+  /* Time block base - more rounded */
+  .time-block {
+    @apply absolute left-1 right-1 rounded-xl px-3 py-2 text-sm font-medium
+           overflow-hidden text-ellipsis whitespace-nowrap z-10;
+  }
+
+  .time-block-task {
+    @apply bg-sage text-white hover:bg-sage-600 cursor-pointer;
+  }
+
+  .time-block-external {
+    @apply bg-warm-gray text-white italic;
+  }
+
+  .time-block-whirlwind {
+    @apply bg-whirlwind text-stone-400 text-xs;
+  }
+
+  /* Day card - used in week overview */
+  .day-card {
+    @apply bg-white rounded-2xl border border-paper-border p-5
+           shadow-sm hover:shadow-md transition-all cursor-pointer;
+  }
+
+  .day-card.expanded {
+    @apply border-sage ring-2 ring-sage-200;
+  }
+
+  .day-card.drop-over {
+    @apply bg-sage-50 border-sage;
+  }
+
+  /* Chevron icon rotation */
+  .chevron-icon {
+    @apply transition-transform duration-200;
+  }
+
+  .chevron-icon.expanded {
+    @apply rotate-180;
+  }
+
+  /* Timeline drawer - inline expansion */
+  .timeline-drawer {
+    @apply mt-3 bg-white rounded-2xl border border-paper-border overflow-hidden;
+    animation: slideDown 300ms ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      max-height: 600px;
+      transform: translateY(0);
+    }
+  }
+
+  /* Mobile timeline overlay */
+  .timeline-overlay {
+    @apply fixed inset-0 z-50 bg-black/40;
+    animation: fadeIn 200ms ease-out;
+  }
+
+  .timeline-overlay-panel {
+    @apply fixed top-0 right-0 bottom-0 w-full bg-white flex flex-col;
+    animation: slideInRight 300ms ease-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Capacity bar */
+  .capacity-bar {
+    @apply h-2 bg-stone-100 rounded-full overflow-hidden;
+  }
+
+  .capacity-bar-fill {
+    @apply h-full bg-sage transition-all duration-500 ease-out;
+  }
+
+  .capacity-bar-fill.over-capacity {
+    @apply bg-coral;
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/40 flex items-center justify-center z-50;
+  }
+
+  /* Modal content - more rounded */
+  .modal-content {
+    @apply bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden;
+  }
+
+  /* Scrollbar styling - softer */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-stone-100 rounded;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-stone-300 rounded hover:bg-stone-400;
+  }
 }
 
 @layer utilities {

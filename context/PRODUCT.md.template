@@ -1,0 +1,98 @@
+# Product Context
+
+> Copy this file to your project as `context/PRODUCT.md` and fill it in.
+> This helps Claude understand your product when running PM commands.
+
+---
+
+## What Is [Product Name]?
+
+[1-2 paragraph description of your product - what it does, who it's for, and the core value proposition]
+
+## Product Stage
+
+**Stage:** [Early/Growth/Mature/Declining]
+
+**Key characteristics:**
+- [What defines this stage for your product]
+- [Current focus areas]
+
+## Core Features
+
+| Feature | Description | User Value |
+|---------|-------------|------------|
+| [Feature 1] | [What it does] | [Why users care] |
+| [Feature 2] | [What it does] | [Why users care] |
+| [Feature 3] | [What it does] | [Why users care] |
+
+## Key Metrics
+
+### North Star Metric
+**[Metric name]:** [Current value]
+*Why this metric:* [Explanation]
+
+### Supporting Metrics
+
+| Metric | Current | Target | Timeframe |
+|--------|---------|--------|-----------|
+| [Metric 1] | [Value] | [Target] | [When] |
+| [Metric 2] | [Value] | [Target] | [When] |
+| [Metric 3] | [Value] | [Target] | [When] |
+
+### Health Metrics (Guardrails)
+
+| Metric | Healthy Range | Current |
+|--------|---------------|---------|
+| [Retention] | [Range] | [Value] |
+| [NPS/CSAT] | [Range] | [Value] |
+| [Other] | [Range] | [Value] |
+
+## Competitive Landscape
+
+### Direct Competitors
+| Competitor | Positioning | Our Advantage |
+|------------|-------------|---------------|
+| [Competitor 1] | [Their position] | [Why we win] |
+| [Competitor 2] | [Their position] | [Why we win] |
+
+### Indirect Competitors / Alternatives
+- [Alternative 1] - [How users use it instead of us]
+- [Alternative 2] - [How users use it instead of us]
+
+## Business Model
+
+**Pricing:** [How you charge - subscription, usage, freemium, etc.]
+
+**Key revenue drivers:**
+- [Driver 1]
+- [Driver 2]
+
+## Current Priorities
+
+### This Quarter
+1. [Priority 1]
+2. [Priority 2]
+3. [Priority 3]
+
+### Not Now (Explicitly Deprioritized)
+- [Thing we're not doing] - [Why not now]
+- [Thing we're not doing] - [Why not now]
+
+## Recent Context
+
+### Recent Launches
+- [Recent launch 1] - [Result/learning]
+- [Recent launch 2] - [Result/learning]
+
+### Active Experiments
+- [Experiment 1] - [Status]
+- [Experiment 2] - [Status]
+
+### Known Issues
+- [Issue 1] - [Status]
+- [Issue 2] - [Status]
+
+---
+
+*Last updated: [Date]*
+*Owner: [Name]*
