@@ -94,8 +94,10 @@ function StatusIndicator({ status }: { status: Subtask['status'] }) {
   const colors: Record<Subtask['status'], string> = {
     estimated: 'bg-yellow-400',
     scheduled: 'bg-blue-400',
+    in_progress: 'bg-purple-400',
     completed: 'bg-green-400',
     overflow: 'bg-red-400',
+    deferred: 'bg-gray-400',
   };
 
   return (

@@ -161,6 +161,8 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 8,
     subtaskIds: [],
+    categoryId: 'cat_house',
+    dueDate: '2025-12-15',
   },
   {
     id: 'backlog_009',
@@ -169,6 +171,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'decomposed',
     priorityRank: 9,
     subtaskIds: ['subtask_004', 'subtask_005', 'subtask_006'],
+    categoryId: 'cat_house',
   },
   {
     id: 'backlog_010',
@@ -177,6 +180,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 10,
     subtaskIds: [],
+    categoryId: 'cat_house',
   },
   {
     id: 'backlog_011',
@@ -185,6 +189,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 11,
     subtaskIds: [],
+    categoryId: 'cat_house',
   },
   {
     id: 'backlog_012',
@@ -193,6 +198,9 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 12,
     subtaskIds: [],
+    categoryId: 'cat_house',
+    recurringFrequency: 'monthly',
+    recurringInterval: 3, // Every 3 months
   },
   {
     id: 'backlog_013',
@@ -201,6 +209,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 13,
     subtaskIds: [],
+    categoryId: 'cat_house',
   },
   {
     id: 'backlog_014',
@@ -209,6 +218,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 14,
     subtaskIds: [],
+    categoryId: 'cat_house',
   },
   {
     id: 'backlog_015',
@@ -217,6 +227,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 15,
     subtaskIds: [],
+    categoryId: 'cat_house',
   },
 
   // ---------------------------------------------------------------------------
@@ -229,6 +240,10 @@ export const backlogItems: BacklogItem[] = [
     status: 'decomposed',
     priorityRank: 16,
     subtaskIds: ['subtask_007', 'subtask_008', 'subtask_009'],
+    categoryId: 'cat_medical',
+    recurringFrequency: 'monthly',
+    recurringInterval: 1,
+    tags: ['health'],
   },
   {
     id: 'backlog_017',
@@ -237,6 +252,8 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 17,
     subtaskIds: [],
+    categoryId: 'cat_medical',
+    tags: ['health'],
   },
   {
     id: 'backlog_018',
@@ -245,14 +262,19 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 18,
     subtaskIds: [],
+    categoryId: 'cat_medical',
+    dueDate: '2025-12-17',
+    tags: ['health'],
   },
   {
     id: 'backlog_019',
     title: 'Research cholesterol meds and other options',
-    description: '#health - look into alternatives and discuss with doctor',
+    description: 'Look into alternatives and discuss with doctor',
     status: 'backlog',
     priorityRank: 19,
     subtaskIds: [],
+    categoryId: 'cat_medical',
+    tags: ['health'],
   },
   {
     id: 'backlog_020',
@@ -261,6 +283,9 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 20,
     subtaskIds: [],
+    categoryId: 'cat_medical',
+    dueDate: '2025-12-20',
+    tags: ['health'],
   },
 
   // ---------------------------------------------------------------------------
@@ -273,6 +298,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'decomposed',
     priorityRank: 21,
     subtaskIds: ['subtask_010', 'subtask_011', 'subtask_012'],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_022',
@@ -281,6 +307,9 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 22,
     subtaskIds: [],
+    categoryId: 'cat_career',
+    recurringFrequency: 'weekly',
+    recurringInterval: 1,
   },
   {
     id: 'backlog_023',
@@ -289,6 +318,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 23,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_024',
@@ -297,6 +327,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 24,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_025',
@@ -305,6 +336,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 25,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_026',
@@ -313,6 +345,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 26,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_027',
@@ -321,6 +354,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 27,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_028',
@@ -329,6 +363,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 28,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
   {
     id: 'backlog_029',
@@ -337,6 +372,7 @@ export const backlogItems: BacklogItem[] = [
     status: 'backlog',
     priorityRank: 29,
     subtaskIds: [],
+    categoryId: 'cat_career',
   },
 ];
 
@@ -468,14 +504,14 @@ export const subtasks: Subtask[] = [
 
 export const timeBlocks: TimeBlock[] = [
   // Monday
-  { id: 'block_001', subtaskId: 'subtask_001', date: '2025-12-15', startTime: '09:30', endTime: '10:00' },
-  { id: 'block_002', subtaskId: 'subtask_002', date: '2025-12-15', startTime: '10:00', endTime: '11:00' },
+  { id: 'block_001', subtaskId: 'subtask_001', date: '2025-12-15', startTime: '09:30', endTime: '10:00', status: 'scheduled' },
+  { id: 'block_002', subtaskId: 'subtask_002', date: '2025-12-15', startTime: '10:00', endTime: '11:00', status: 'scheduled' },
   // Tuesday
-  { id: 'block_003', subtaskId: 'subtask_004', date: '2025-12-16', startTime: '08:00', endTime: '08:30' },
+  { id: 'block_003', subtaskId: 'subtask_004', date: '2025-12-16', startTime: '08:00', endTime: '08:30', status: 'scheduled' },
   // Wednesday
-  { id: 'block_004', subtaskId: 'subtask_007', date: '2025-12-17', startTime: '11:00', endTime: '11:20' },
+  { id: 'block_004', subtaskId: 'subtask_007', date: '2025-12-17', startTime: '11:00', endTime: '11:20', status: 'scheduled' },
   // Thursday
-  { id: 'block_005', subtaskId: 'subtask_010', date: '2025-12-18', startTime: '08:00', endTime: '09:00' },
+  { id: 'block_005', subtaskId: 'subtask_010', date: '2025-12-18', startTime: '08:00', endTime: '09:00', status: 'scheduled' },
 ];
 
 // =============================================================================
@@ -554,6 +590,14 @@ export const decompositionSuggestions: Record<string, Partial<Subtask>[]> = {
 
 export function getUser(): User {
   return user;
+}
+
+export function getCategories(): Category[] {
+  return categories;
+}
+
+export function getCategoryById(categoryId: string): Category | undefined {
+  return categories.find((c) => c.id === categoryId);
 }
 
 export function getExternalEvents(weekStartDate?: string): ExternalEvent[] {

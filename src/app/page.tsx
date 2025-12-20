@@ -157,6 +157,7 @@ export default function WeeklyPlanningPage() {
         date: day.date,
         startTime: formatHour(startHour),
         endTime: formatHour(endHour),
+        status: 'scheduled',
       };
 
       // Update time blocks

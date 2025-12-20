@@ -13,6 +13,7 @@
 // =============================================================================
 export {
   user,
+  categories,
   externalEvents,
   backlogItems,
   subtasks,
@@ -20,6 +21,8 @@ export {
   weeklyPlan,
   decompositionSuggestions,
   getUser,
+  getCategories,
+  getCategoryById,
   getExternalEvents,
   getBacklogItems,
   getSubtasks,

@@ -73,6 +73,20 @@ This is the core behavioral change the app must enable:
 - Plan remains adaptable (can still move tasks)
 - Tracks commitment vs. completion for reflection
 
+### The Trade-off Acknowledgment
+
+**Key insight:** Committing to a weekly plan isn't just about what you're doing—it's about consciously accepting what you're *not* doing.
+
+When you commit:
+- You see the gap between your backlog and your plan
+- You acknowledge that unscheduled items won't get attention this week
+- You make peace with that trade-off explicitly
+
+**UX implication:** The CommitConfirmationModal should surface this:
+> "By committing to these 12 tasks, you're choosing NOT to make progress on 17 other backlog items this week. Is that okay?"
+
+This transforms the commit from a passive checkbox into an active acknowledgment. It's the difference between "I couldn't fit everything" (victim mindset) and "I'm choosing to focus on these things" (ownership mindset).
+
 ---
 
 ## Time Boss Framework Alignment
@@ -148,7 +162,7 @@ These address Jon's specific pain points:
 | 3 | As a user, I want to see my true capacity before scheduling | - Shows: total hours, external events, whirlwind buffer, plannable time<br>- Updates in real-time as I schedule |
 | 4 | As a user, I want to drag subtasks to specific calendar slots | - Drag from backlog to day/time<br>- Visual feedback during drag<br>- Snaps to time increments |
 | 5 | As a user, when I've scheduled more than capacity, I want clear options to resolve overflow | - Overflow indicator when scheduled > capacity<br>- Modal with options: defer, delete, shrink estimate<br>- Cannot commit until resolved |
-| 6 | As a user, I want to commit to my weekly plan | - "Commit" button locks in plan<br>- Enables time block notifications<br>- Records commitment for reflection |
+| 6 | As a user, I want to commit to my weekly plan and acknowledge what I'm NOT doing | - "Commit" button shows trade-off acknowledgment<br>- Displays: scheduled tasks vs. remaining backlog items<br>- Explicit "Is that okay?" confirmation<br>- Enables time block notifications<br>- Records commitment for reflection |
 
 ### Daily Review Flow
 
@@ -526,7 +540,12 @@ Rules:
   - "Need more time" → Voice capture progress → Create follow-up → Schedule
 
 **Commit Confirmation Modal:**
-- Summary of weekly plan
+- Summary of weekly plan (X tasks, Y hours scheduled)
+- **Trade-off Acknowledgment section:**
+  - "You're committing to [X] tasks totaling [Y hours] this week"
+  - "This means [Z] backlog items won't get attention this week"
+  - Optional: show top 3-5 highest-priority unscheduled items
+  - Explicit question: "Is that okay with you?"
 - Confirm commitment action
 - Enables notifications
 

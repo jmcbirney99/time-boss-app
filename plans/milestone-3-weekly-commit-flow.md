@@ -64,15 +64,43 @@ interface CommitConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   scheduledMinutes: number;
-  taskCount: number;
+  scheduledTaskCount: number;
+  unscheduledBacklogCount: number;
+  topUnscheduledItems: BacklogItem[]; // Top 3-5 by priority
 }
 ```
 
 **Modal content:**
 - Header: "Commit Weekly Plan"
-- Body: "You are committing to [X] tasks totaling [Y hours] this week."
+- Commitment summary: "You are committing to [X] tasks totaling [Y hours] this week."
+- **Trade-off Acknowledgment section:**
+  - "This means [Z] backlog items won't get attention this week"
+  - List top 3-5 highest-priority unscheduled items (title only)
+  - Visual separator
+  - Question: "Is that okay with you?"
 - Note: "Once committed, you'll get reminders when time blocks end."
-- Footer: Cancel (secondary) + "Commit Plan" (primary)
+- Footer: Cancel (secondary) + "Yes, Commit Plan" (primary)
+
+**Trade-off section UI:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  What you're committing to:                                  │
+│    12 tasks • 18 hours scheduled                            │
+├─────────────────────────────────────────────────────────────┤
+│  What won't get attention this week:                        │
+│    17 backlog items, including:                             │
+│    • Create estate planning legal docs                      │
+│    • Fix backyard electrical outlet                         │
+│    • Research cholesterol meds                              │
+│    + 14 more...                                             │
+├─────────────────────────────────────────────────────────────┤
+│  Is that okay with you?                                     │
+│                                                             │
+│           [Cancel]        [Yes, Commit Plan]                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key insight:** This transforms the commit from "I resolved overflow" (reactive) to "I'm consciously choosing to focus on these things" (ownership).
 
 ---
 
@@ -164,6 +192,11 @@ TopBar re-renders with "Committed" badge
 - [ ] Commit button shows in TopBar when plan status is 'planning'
 - [ ] Commit button is disabled when overflow exists
 - [ ] Clicking enabled button opens confirmation modal
+- [ ] Modal shows trade-off acknowledgment:
+  - [ ] Displays count of scheduled tasks and total hours
+  - [ ] Displays count of unscheduled backlog items
+  - [ ] Lists top 3-5 highest-priority unscheduled items
+  - [ ] Asks "Is that okay with you?"
 - [ ] Confirming changes status to 'committed' and sets timestamp
 - [ ] "Committed" badge shows after committing
 - [ ] Cannot commit again once committed
