@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api-utils';
+import { UserUpdateSchema } from '@/lib/schemas';
+import { ZodError } from 'zod';
 
-export async function GET() {
+export const GET = withAuth(async (request, user) => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const { data, error } = await supabase
     .from('profiles')
@@ -30,16 +29,30 @@ export async function GET() {
     whirlwindPercentage: data.whirlwind_percentage,
     estimationMultiplier: data.estimation_multiplier,
   });
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = withAuth(async (request, user) => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let body;
+  try {
+    body = await request.json();
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
 
-  const body = await request.json();
+  // Validate input with Zod
+  try {
+    body = UserUpdateSchema.parse(body);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message }))
+      }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
 
   // Convert camelCase to snake_case for database
   const updateData: Record<string, unknown> = {};
@@ -72,4 +85,4 @@ export async function PUT(request: Request) {
     whirlwindPercentage: data.whirlwind_percentage,
     estimationMultiplier: data.estimation_multiplier,
   });
-}
+});

@@ -157,6 +157,10 @@ export function useTimeBlocks(startDate?: string, endDate?: string) {
 // External Events Hook
 // ============================================================================
 
+/**
+ * Hook for external events state (calendar integration - future milestone)
+ * @see plans/milestone-1-data-foundation.md
+ */
 export function useExternalEvents(startDate?: string, endDate?: string) {
   const { data, loading, error, refresh } = useDataFetch<ExternalEvent[]>(
     () => api.fetchExternalEvents(startDate, endDate),
@@ -188,6 +192,10 @@ export function useExternalEvents(startDate?: string, endDate?: string) {
 // Weekly Plan Hook
 // ============================================================================
 
+/**
+ * Hook for weekly plan state (Milestone 3: Weekly Commit Flow)
+ * @see plans/milestone-3-weekly-commit-flow.md
+ */
 export function useWeeklyPlan(weekStartDate: string) {
   const { data, loading, error, refresh } = useDataFetch<WeeklyPlan | null>(
     () => api.fetchWeeklyPlan(weekStartDate),
@@ -241,6 +249,10 @@ export function useUser() {
 // Categories Hook
 // ============================================================================
 
+/**
+ * Hook for categories state (backlog organization - Milestone 1 schema ready)
+ * @see plans/milestone-1-data-foundation.md
+ */
 export function useCategories() {
   const { data, loading, error, refresh } = useDataFetch<Category[]>(
     () => api.fetchCategories(),

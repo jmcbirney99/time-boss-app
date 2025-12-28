@@ -1,16 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api-utils';
+import { SubtaskUpdateSchema } from '@/lib/schemas';
+import { ZodError } from 'zod';
 
-export async function GET(
-  request: Request,
+export const GET = withAuth(async (
+  request,
+  user,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const { data, error } = await supabase
     .from('subtasks')
@@ -27,20 +27,35 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json(data);
-}
+});
 
-export async function PUT(
-  request: Request,
+export const PUT = withAuth(async (
+  request,
+  user,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let body;
+  try {
+    body = await request.json();
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
 
-  const body = await request.json();
+  // Validate input with Zod
+  try {
+    body = SubtaskUpdateSchema.parse(body);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message }))
+      }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
 
   // Convert camelCase to snake_case for database
   const updateData: Record<string, unknown> = {};
@@ -66,18 +81,15 @@ export async function PUT(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json(data);
-}
+});
 
-export async function DELETE(
-  request: Request,
+export const DELETE = withAuth(async (
+  request,
+  user,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const { error } = await supabase
     .from('subtasks')
@@ -88,4 +100,4 @@ export async function DELETE(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json({ success: true });
-}
+});
