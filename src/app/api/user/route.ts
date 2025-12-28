@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError } from '@/lib/api-utils';
 import { UserUpdateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
@@ -14,7 +14,7 @@ export const GET = withAuth(async (request, user) => {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to fetch user profile', error.message);
   }
 
   // Transform snake_case to camelCase for frontend
@@ -38,7 +38,7 @@ export const PUT = withAuth(async (request, user) => {
   try {
     body = await request.json();
   } catch (error) {
-    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+    return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
@@ -46,12 +46,9 @@ export const PUT = withAuth(async (request, user) => {
     body = UserUpdateSchema.parse(body);
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message }))
-      }, { status: 400 });
+      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
-    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    return badRequest('Invalid input');
   }
 
   // Convert camelCase to snake_case for database
@@ -71,7 +68,7 @@ export const PUT = withAuth(async (request, user) => {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to update user profile', error.message);
   }
 
   return NextResponse.json({

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-utils';
+import { withAuth, serverError } from '@/lib/api-utils';
 
 export const DELETE = withAuth(async (
   request,
@@ -17,7 +17,7 @@ export const DELETE = withAuth(async (
     .eq('user_id', user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to delete external event', error.message);
   }
   return NextResponse.json({ success: true });
 });

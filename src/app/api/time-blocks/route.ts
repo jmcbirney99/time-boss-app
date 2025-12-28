@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-utils';
+import { withAuth, badRequest, notFound, serverError } from '@/lib/api-utils';
 import { TimeBlockCreateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
@@ -32,7 +32,7 @@ export const GET = withAuth(async (request, user) => {
   const { data, error } = await query.order('date').order('start_time');
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to fetch time blocks', error.message);
   }
   return NextResponse.json(data);
 });
@@ -44,7 +44,7 @@ export const POST = withAuth(async (request, user) => {
   try {
     body = await request.json();
   } catch (error) {
-    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+    return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
@@ -52,12 +52,9 @@ export const POST = withAuth(async (request, user) => {
     body = TimeBlockCreateSchema.parse(body);
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message }))
-      }, { status: 400 });
+      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
-    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    return badRequest('Invalid input');
   }
 
   // Verify the subtask belongs to a backlog item owned by the user
@@ -72,7 +69,7 @@ export const POST = withAuth(async (request, user) => {
     .single();
 
   if (!subtask) {
-    return NextResponse.json({ error: 'Subtask not found' }, { status: 404 });
+    return notFound('Subtask not found');
   }
 
   const { data, error } = await supabase
@@ -88,7 +85,7 @@ export const POST = withAuth(async (request, user) => {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to create time block', error.message);
   }
 
   // Update subtask status to scheduled

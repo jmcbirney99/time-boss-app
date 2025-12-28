@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError } from '@/lib/api-utils';
 import { WeeklyPlanCreateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
@@ -11,7 +11,7 @@ export const GET = withAuth(async (request, user) => {
   const weekStartDate = searchParams.get('weekStartDate');
 
   if (!weekStartDate) {
-    return NextResponse.json({ error: 'weekStartDate is required' }, { status: 400 });
+    return badRequest('weekStartDate query parameter is required');
   }
 
   const { data, error } = await supabase
@@ -23,7 +23,7 @@ export const GET = withAuth(async (request, user) => {
 
   if (error && error.code !== 'PGRST116') {
     // PGRST116 = no rows found, which is OK
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to fetch weekly plan', error.message);
   }
 
   return NextResponse.json(data || null);
@@ -36,7 +36,7 @@ export const POST = withAuth(async (request, user) => {
   try {
     body = await request.json();
   } catch (error) {
-    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+    return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
@@ -44,12 +44,9 @@ export const POST = withAuth(async (request, user) => {
     body = WeeklyPlanCreateSchema.parse(body);
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message }))
-      }, { status: 400 });
+      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
-    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    return badRequest('Invalid input');
   }
 
   // Upsert: create or update weekly plan
@@ -68,7 +65,7 @@ export const POST = withAuth(async (request, user) => {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('Failed to save weekly plan', error.message);
   }
   return NextResponse.json(data, { status: 201 });
 });

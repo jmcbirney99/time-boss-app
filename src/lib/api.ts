@@ -1,4 +1,18 @@
-import type { BacklogItem, Subtask, TimeBlock, ExternalEvent, User, Category, WeeklyPlan } from '@/types';
+import {
+  BacklogItemSchema,
+  SubtaskSchema,
+  TimeBlockSchema,
+  ExternalEventSchema,
+  CategorySchema,
+  WeeklyPlanSchema,
+  type BacklogItem,
+  type Subtask,
+  type TimeBlock,
+  type ExternalEvent,
+  type Category,
+  type WeeklyPlan,
+} from '@/lib/schemas';
+import type { User } from '@/types';
 
 // Helper function for API calls
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
@@ -18,83 +32,95 @@ async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// Transform database snake_case to TypeScript camelCase
+// Transform database snake_case to TypeScript camelCase with Zod validation
 function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
-  return {
-    id: item.id as string,
-    title: item.title as string,
-    description: (item.description as string) || '',
-    status: item.status as BacklogItem['status'],
-    priorityRank: item.priority_rank as number,
-    subtaskIds: ((item.subtasks as Array<{ id: string }>) || []).map(s => s.id),
-    categoryId: item.category_id as string | undefined,
-    dueDate: item.due_date as string | undefined,
-    dueTime: item.due_time as string | undefined,
-    recurringFrequency: item.recurring_frequency as BacklogItem['recurringFrequency'],
-    recurringInterval: item.recurring_interval as number | undefined,
-    recurringRule: item.recurring_rule as string | undefined,
-    tags: item.tags as string[] | undefined,
+  const transformed = {
+    id: item.id,
+    title: item.title,
+    description: item.description || '',
+    status: item.status,
+    priorityRank: item.priority_rank,
+    subtaskIds: ((item.subtasks as Array<{ id: string }> | undefined) || []).map(s => s.id),
+    categoryId: item.category_id,
+    dueDate: item.due_date,
+    dueTime: item.due_time,
+    recurringFrequency: item.recurring_frequency,
+    recurringInterval: item.recurring_interval,
+    recurringRule: item.recurring_rule,
+    tags: item.tags,
   };
+
+  return BacklogItemSchema.parse(transformed);
 }
 
 function transformSubtask(item: Record<string, unknown>): Subtask {
-  return {
-    id: item.id as string,
-    backlogItemId: item.backlog_item_id as string,
-    title: item.title as string,
-    definitionOfDone: (item.definition_of_done as string) || '',
-    estimatedMinutes: item.estimated_minutes as number,
-    status: item.status as Subtask['status'],
+  const transformed = {
+    id: item.id,
+    backlogItemId: item.backlog_item_id,
+    title: item.title,
+    definitionOfDone: item.definition_of_done || '',
+    estimatedMinutes: item.estimated_minutes,
+    status: item.status,
     scheduledBlockId: null, // Will be set based on time_blocks
-    actualMinutes: item.actual_minutes as number | undefined,
-    completedAt: item.completed_at as string | undefined,
-    progressNote: item.progress_note as string | undefined,
-    parentSubtaskId: item.parent_subtask_id as string | undefined,
-    llmGenerated: item.llm_generated as boolean | undefined,
-    llmRationale: item.llm_rationale as string | undefined,
+    actualMinutes: item.actual_minutes,
+    completedAt: item.completed_at,
+    progressNote: item.progress_note,
+    parentSubtaskId: item.parent_subtask_id,
+    llmGenerated: item.llm_generated,
+    llmRationale: item.llm_rationale,
   };
+
+  return SubtaskSchema.parse(transformed);
 }
 
 function transformTimeBlock(item: Record<string, unknown>): TimeBlock {
-  return {
-    id: item.id as string,
-    subtaskId: item.subtask_id as string,
-    date: item.date as string,
-    startTime: item.start_time as string,
-    endTime: item.end_time as string,
-    status: item.status as TimeBlock['status'],
+  const transformed = {
+    id: item.id,
+    subtaskId: item.subtask_id,
+    date: item.date,
+    startTime: item.start_time,
+    endTime: item.end_time,
+    status: item.status,
   };
+
+  return TimeBlockSchema.parse(transformed);
 }
 
 function transformExternalEvent(item: Record<string, unknown>): ExternalEvent {
-  return {
-    id: item.id as string,
-    title: item.title as string,
-    date: item.date as string,
-    startTime: item.start_time as string,
-    endTime: item.end_time as string,
+  const transformed = {
+    id: item.id,
+    title: item.title,
+    date: item.date,
+    startTime: item.start_time,
+    endTime: item.end_time,
   };
+
+  return ExternalEventSchema.parse(transformed);
 }
 
 function transformCategory(item: Record<string, unknown>): Category {
-  return {
-    id: item.id as string,
-    name: item.name as string,
-    color: item.color as string | undefined,
+  const transformed = {
+    id: item.id,
+    name: item.name,
+    color: item.color,
   };
+
+  return CategorySchema.parse(transformed);
 }
 
 function transformWeeklyPlan(item: Record<string, unknown>): WeeklyPlan {
-  return {
-    id: item.id as string,
-    weekStartDate: item.week_start_date as string,
-    status: item.status as WeeklyPlan['status'],
+  const transformed = {
+    id: item.id,
+    weekStartDate: item.week_start_date,
+    status: item.status,
     totalCapacityMinutes: 0, // Calculated on frontend
     scheduledMinutes: 0, // Calculated on frontend
     overflowSubtaskIds: [],
-    committedAt: item.committed_at as string | undefined,
-    reflectionNotes: (item.reflection_notes as { notes?: string })?.notes,
+    committedAt: item.committed_at,
+    reflectionNotes: (item.reflection_notes as { notes?: string } | undefined)?.notes,
   };
+
+  return WeeklyPlanSchema.parse(transformed);
 }
 
 // ============================================================================
