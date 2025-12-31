@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -25,30 +25,67 @@ import { OverflowModal } from '@/components/modals/OverflowModal';
 import { useCapacityCalculation } from '@/hooks/useCapacityCalculation';
 import { useModalState } from '@/hooks/useModalState';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useAppData } from '@/hooks/useData';
 
-import {
-  getUser,
-  getBacklogItems,
-  getSubtasks,
-  getTimeBlocks,
-  getExternalEvents,
-  getDayColumns,
-} from '@/data/mockData';
+import { formatDuration, formatWeekRange, getWeekStart, calculateDuration } from '@/lib/dateUtils';
+import * as api from '@/lib/api';
+import type { BacklogItem, Subtask, TimeBlock, OverflowResolution, TimeEstimate, DayColumn, User, ExternalEvent } from '@/types';
 
-import { formatDuration, formatWeekRange } from '@/lib/dateUtils';
-import type { BacklogItem, Subtask, TimeBlock, OverflowResolution, TimeEstimate, DayColumn } from '@/types';
+// Default user for capacity calculation when loading
+const defaultUser: User = {
+  id: 'default',
+  name: 'User',
+  workHours: { start: '08:00', end: '17:00', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
+  whirlwindPercentage: 0.4,
+  estimationMultiplier: 1.0,
+};
 
 export default function WeeklyPlanningPage() {
-  // Load initial mock data
-  const user = getUser();
-  const [backlogItems, setBacklogItems] = useState<BacklogItem[]>(getBacklogItems());
-  const [subtasks, setSubtasks] = useState<Subtask[]>(getSubtasks());
-  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>(getTimeBlocks());
-  const externalEvents = getExternalEvents();
+  // Current week
+  const weekStart = useMemo(() => {
+    const now = new Date();
+    return getWeekStart(now);
+  }, []);
+  const weekStartStr = weekStart.toISOString().split('T')[0];
+  const weekEndStr = useMemo(() => {
+    const end = new Date(weekStart);
+    end.setDate(end.getDate() + 4); // Friday
+    return end.toISOString().split('T')[0];
+  }, [weekStart]);
 
-  // Current week (fixed for prototype to match mock data)
-  const weekStart = useMemo(() => new Date('2025-12-09'), []);
-  const weekStartStr = '2025-12-09';
+  // Fetch all data from API
+  const appData = useAppData(weekStartStr, weekEndStr);
+
+  // Local state for optimistic updates
+  const [localBacklogItems, setLocalBacklogItems] = useState<BacklogItem[]>([]);
+  const [localSubtasks, setLocalSubtasks] = useState<Subtask[]>([]);
+  const [localTimeBlocks, setLocalTimeBlocks] = useState<TimeBlock[]>([]);
+
+  // Sync API data to local state
+  useEffect(() => {
+    if (appData.backlog.backlog.length > 0) {
+      setLocalBacklogItems(appData.backlog.backlog);
+    }
+  }, [appData.backlog.backlog]);
+
+  useEffect(() => {
+    if (appData.subtasks.subtasks.length > 0) {
+      setLocalSubtasks(appData.subtasks.subtasks);
+    }
+  }, [appData.subtasks.subtasks]);
+
+  useEffect(() => {
+    if (appData.timeBlocks.timeBlocks.length > 0) {
+      setLocalTimeBlocks(appData.timeBlocks.timeBlocks);
+    }
+  }, [appData.timeBlocks.timeBlocks]);
+
+  // Use fetched data or defaults
+  const user = appData.user.user || defaultUser;
+  const externalEvents = appData.externalEvents.events;
+  const backlogItems = localBacklogItems;
+  const subtasks = localSubtasks;
+  const timeBlocks = localTimeBlocks;
 
   // Expanded day for timeline view (toggle behavior)
   const [expandedDayId, setExpandedDayId] = useState<string | null>(null);
@@ -65,7 +102,7 @@ export default function WeeklyPlanningPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Get day columns for week overview
-  const dayColumns = useMemo(() => getDayColumns(weekStartStr), []);
+  const dayColumns = useMemo(() => getDayColumnsFromData(weekStartStr, externalEvents, timeBlocks, user), [weekStartStr, externalEvents, timeBlocks, user]);
 
   // Get expanded day data (for mobile overlay)
   const expandedDay = useMemo(() => {
@@ -110,7 +147,7 @@ export default function WeeklyPlanningPage() {
 
   // Handle scheduling a subtask to a day (system auto-assigns time)
   const handleScheduleToDay = useCallback(
-    (subtaskId: string, dayId: string) => {
+    async (subtaskId: string, dayId: string) => {
       const subtask = subtasks.find((s) => s.id === subtaskId);
       const day = dayColumns.find((d) => d.id === dayId);
       if (!subtask || !day) return;
@@ -150,9 +187,10 @@ export default function WeeklyPlanningPage() {
         return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
       };
 
-      // Create new time block
+      // Optimistic update
+      const tempBlockId = `temp-${Date.now()}`;
       const newBlock: TimeBlock = {
-        id: `block-${Date.now()}`,
+        id: tempBlockId,
         subtaskId,
         date: day.date,
         startTime: formatHour(startHour),
@@ -160,14 +198,11 @@ export default function WeeklyPlanningPage() {
         status: 'scheduled',
       };
 
-      // Update time blocks
-      setTimeBlocks((prev) => [...prev, newBlock]);
-
-      // Update subtask status
-      setSubtasks((prev) =>
+      setLocalTimeBlocks((prev) => [...prev, newBlock]);
+      setLocalSubtasks((prev) =>
         prev.map((s) =>
           s.id === subtaskId
-            ? { ...s, status: 'scheduled' as const, scheduledBlockId: newBlock.id }
+            ? { ...s, status: 'scheduled' as const, scheduledBlockId: tempBlockId }
             : s
         )
       );
@@ -175,7 +210,38 @@ export default function WeeklyPlanningPage() {
       // Auto-expand the day to show the timeline
       setExpandedDayId(dayId);
 
-      console.log(`Scheduled subtask ${subtaskId} to ${day.dayName}`);
+      // Persist to API
+      try {
+        const createdBlock = await api.createTimeBlock({
+          subtaskId,
+          date: day.date,
+          startTime: formatHour(startHour),
+          endTime: formatHour(endHour),
+        });
+
+        // Update with real ID
+        setLocalTimeBlocks((prev) =>
+          prev.map((b) => (b.id === tempBlockId ? createdBlock : b))
+        );
+        setLocalSubtasks((prev) =>
+          prev.map((s) =>
+            s.id === subtaskId
+              ? { ...s, scheduledBlockId: createdBlock.id }
+              : s
+          )
+        );
+      } catch (error) {
+        console.error('Failed to create time block:', error);
+        // Rollback optimistic update
+        setLocalTimeBlocks((prev) => prev.filter((b) => b.id !== tempBlockId));
+        setLocalSubtasks((prev) =>
+          prev.map((s) =>
+            s.id === subtaskId
+              ? { ...s, status: 'estimated' as const, scheduledBlockId: null }
+              : s
+          )
+        );
+      }
     },
     [subtasks, dayColumns, timeBlocks, externalEvents]
   );
@@ -212,7 +278,7 @@ export default function WeeklyPlanningPage() {
 
   // Handle decomposition save
   const handleDecompositionSave = useCallback(
-    (
+    async (
       newSubtasks: Array<{
         id: string;
         title: string;
@@ -224,60 +290,77 @@ export default function WeeklyPlanningPage() {
 
       const backlogItemId = decompositionData.backlogItemId;
 
-      // Create new subtasks
-      const createdSubtasks: Subtask[] = newSubtasks.map((s, index) => ({
-        id: s.id.startsWith('new-') ? `subtask-${Date.now()}-${index}` : s.id,
-        backlogItemId,
-        title: s.title,
-        definitionOfDone: s.definitionOfDone,
-        estimatedMinutes: s.estimatedMinutes,
-        status: 'estimated' as const,
-        scheduledBlockId: null,
-      }));
+      // Create new subtasks via API
+      const createdSubtasks: Subtask[] = [];
+      for (const s of newSubtasks) {
+        try {
+          const created = await api.createSubtask({
+            backlogItemId,
+            title: s.title,
+            estimatedMinutes: s.estimatedMinutes,
+            definitionOfDone: s.definitionOfDone,
+          });
+          createdSubtasks.push(created);
+        } catch (error) {
+          console.error('Failed to create subtask:', error);
+        }
+      }
 
-      // Remove old subtasks for this item and add new ones
-      setSubtasks((prev) => [
+      // Update local state
+      setLocalSubtasks((prev) => [
         ...prev.filter((s) => s.backlogItemId !== backlogItemId),
         ...createdSubtasks,
       ]);
 
       // Update backlog item status
-      setBacklogItems((prev) =>
-        prev.map((item) =>
-          item.id === backlogItemId
-            ? {
-                ...item,
-                status: 'decomposed' as const,
-                subtaskIds: createdSubtasks.map((s) => s.id),
-              }
-            : item
-        )
-      );
+      try {
+        await api.updateBacklogItem(backlogItemId, { status: 'decomposed' });
+        setLocalBacklogItems((prev) =>
+          prev.map((item) =>
+            item.id === backlogItemId
+              ? {
+                  ...item,
+                  status: 'decomposed' as const,
+                  subtaskIds: createdSubtasks.map((s) => s.id),
+                }
+              : item
+          )
+        );
+      } catch (error) {
+        console.error('Failed to update backlog item:', error);
+      }
     },
     [decompositionData]
   );
 
   // Handle overflow resolution
   const handleOverflowResolve = useCallback(
-    (resolutions: Map<string, OverflowResolution>) => {
-      resolutions.forEach((resolution, subtaskId) => {
-        switch (resolution) {
-          case 'backlog':
-            setSubtasks((prev) =>
-              prev.map((s) => (s.id === subtaskId ? { ...s, status: 'estimated' as const } : s))
-            );
-            break;
-          case 'delete':
-            setSubtasks((prev) => prev.filter((s) => s.id !== subtaskId));
-            break;
-          case 'reschedule':
-          case 'reduce':
-            setSubtasks((prev) =>
-              prev.map((s) => (s.id === subtaskId ? { ...s, status: 'estimated' as const } : s))
-            );
-            break;
+    async (resolutions: Map<string, OverflowResolution>) => {
+      for (const [subtaskId, resolution] of Array.from(resolutions.entries())) {
+        try {
+          switch (resolution) {
+            case 'backlog':
+              await api.updateSubtask(subtaskId, { status: 'estimated' });
+              setLocalSubtasks((prev) =>
+                prev.map((s) => (s.id === subtaskId ? { ...s, status: 'estimated' as const } : s))
+              );
+              break;
+            case 'delete':
+              await api.deleteSubtask(subtaskId);
+              setLocalSubtasks((prev) => prev.filter((s) => s.id !== subtaskId));
+              break;
+            case 'reschedule':
+            case 'reduce':
+              await api.updateSubtask(subtaskId, { status: 'estimated' });
+              setLocalSubtasks((prev) =>
+                prev.map((s) => (s.id === subtaskId ? { ...s, status: 'estimated' as const } : s))
+              );
+              break;
+          }
+        } catch (error) {
+          console.error('Failed to resolve overflow:', error);
         }
-      });
+      }
     },
     []
   );
@@ -317,6 +400,18 @@ export default function WeeklyPlanningPage() {
   const updatedExpandedDay = useMemo(() => {
     return updatedDayColumns.find((d) => d.id === expandedDayId) || null;
   }, [updatedDayColumns, expandedDayId]);
+
+  // Loading state
+  if (appData.loading && backlogItems.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage-600 mx-auto mb-4"></div>
+          <p className="text-stone-500">Loading your week...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DndContext
@@ -409,4 +504,54 @@ export default function WeeklyPlanningPage() {
       </div>
     </DndContext>
   );
+}
+
+// Helper function to generate day columns from data
+function getDayColumnsFromData(
+  weekStartDate: string,
+  externalEvents: ExternalEvent[],
+  timeBlocks: TimeBlock[],
+  user: User
+): DayColumn[] {
+  const weekStart = new Date(weekStartDate);
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  const dayIds = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  return dayIds.map((id, index) => {
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() + index);
+    const dateStr = date.toISOString().split('T')[0];
+
+    const dayEvents = externalEvents.filter(e => e.date === dateStr);
+    const dayBlocks = timeBlocks.filter(b => b.date === dateStr);
+
+    const externalMinutes = dayEvents.reduce((sum, event) => {
+      return sum + calculateDuration(event.startTime, event.endTime);
+    }, 0);
+
+    const scheduledMinutes = dayBlocks.reduce((sum, block) => {
+      return sum + calculateDuration(block.startTime, block.endTime);
+    }, 0);
+
+    const totalWorkMinutes = 9 * 60;
+    const afterExternals = totalWorkMinutes - externalMinutes;
+    const whirlwindMinutes = Math.round(afterExternals * user.whirlwindPercentage);
+    const capacity = afterExternals - whirlwindMinutes;
+
+    const shortDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    return {
+      id,
+      dayName: dayNames[index],
+      date: dateStr,
+      shortDate,
+      capacity,
+      scheduledMinutes,
+      taskCount: dayBlocks.length,
+      isToday: dateStr === todayStr,
+    };
+  });
 }
