@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/Button';
 import type { BacklogItem, Subtask, TimeEstimate } from '@/types';
 import { TIME_ESTIMATES } from '@/lib/constants';
 import { formatDuration } from '@/lib/dateUtils';
-import { getDecompositionSuggestions } from '@/data/mockData';
 
 interface SubtaskDraft {
   id: string;
   title: string;
   estimatedMinutes: TimeEstimate;
   definitionOfDone: string;
+  rationale?: string;
+  llmGenerated?: boolean;
 }
 
 interface DecompositionModalProps {
@@ -31,8 +32,10 @@ export function DecompositionModal({
   onSave,
 }: DecompositionModalProps) {
   const [subtasks, setSubtasks] = useState<SubtaskDraft[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load existing subtasks or suggestions when modal opens
+  // Load existing subtasks or fetch AI suggestions when modal opens
   useEffect(() => {
     if (isOpen && backlogItem) {
       if (existingSubtasks.length > 0) {
@@ -43,45 +46,82 @@ export function DecompositionModal({
             title: s.title,
             estimatedMinutes: s.estimatedMinutes as TimeEstimate,
             definitionOfDone: s.definitionOfDone,
+            llmGenerated: s.llmGenerated,
+            rationale: s.llmRationale,
           }))
         );
+        setError(null);
       } else {
-        // Load LLM suggestions (mock)
-        const suggestions = getDecompositionSuggestions(backlogItem.id);
-        if (suggestions.length > 0) {
-          setSubtasks(
-            suggestions.map((s, index) => ({
-              id: `new-${Date.now()}-${index}`,
-              title: s.title || '',
-              estimatedMinutes: (s.estimatedMinutes as TimeEstimate) || 60,
-              definitionOfDone: s.definitionOfDone || '',
-            }))
-          );
-        } else {
-          // Default empty subtask
-          setSubtasks([
-            {
-              id: `new-${Date.now()}`,
-              title: '',
-              estimatedMinutes: 60,
-              definitionOfDone: '',
+        // Fetch AI suggestions
+        setIsLoading(true);
+        setError(null);
+
+        fetch('/api/decompose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            backlogItem: {
+              title: backlogItem.title,
+              description: backlogItem.description,
             },
-          ]);
-        }
+            constraints: {
+              minSubtaskMinutes: 60,
+              maxSubtaskMinutes: 240,
+              maxSubtasks: 8,
+            },
+          }),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Failed to generate suggestions');
+            return res.json();
+          })
+          .then((data) => {
+            if (data.subtasks && data.subtasks.length > 0) {
+              setSubtasks(
+                data.subtasks.map((s: { title: string; definitionOfDone: string; estimatedMinutes: number; rationale: string }, index: number) => ({
+                  id: `new-${Date.now()}-${index}`,
+                  title: s.title,
+                  estimatedMinutes: normalizeEstimate(s.estimatedMinutes),
+                  definitionOfDone: s.definitionOfDone,
+                  rationale: s.rationale,
+                  llmGenerated: true,
+                }))
+              );
+            } else {
+              // Fallback to empty subtask if no suggestions
+              setSubtasks([createEmptySubtask()]);
+            }
+          })
+          .catch((err) => {
+            console.error('Decomposition error:', err);
+            setError('Failed to generate AI suggestions. You can add subtasks manually.');
+            setSubtasks([createEmptySubtask()]);
+          })
+          .finally(() => setIsLoading(false));
       }
     }
   }, [isOpen, backlogItem, existingSubtasks]);
 
+  // Normalize estimate to nearest valid TimeEstimate
+  function normalizeEstimate(minutes: number): TimeEstimate {
+    const validEstimates: TimeEstimate[] = [30, 60, 90, 120, 180, 240];
+    return validEstimates.reduce((prev, curr) =>
+      Math.abs(curr - minutes) < Math.abs(prev - minutes) ? curr : prev
+    );
+  }
+
+  function createEmptySubtask(): SubtaskDraft {
+    return {
+      id: `new-${Date.now()}`,
+      title: '',
+      estimatedMinutes: 60,
+      definitionOfDone: '',
+      llmGenerated: false,
+    };
+  }
+
   const handleAddSubtask = () => {
-    setSubtasks([
-      ...subtasks,
-      {
-        id: `new-${Date.now()}`,
-        title: '',
-        estimatedMinutes: 60,
-        definitionOfDone: '',
-      },
-    ]);
+    setSubtasks([...subtasks, createEmptySubtask()]);
   };
 
   const handleRemoveSubtask = (id: string) => {
@@ -119,7 +159,9 @@ export function DecompositionModal({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Subtasks</Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            Save Subtasks
+          </Button>
         </>
       }
     >
@@ -131,27 +173,44 @@ export function DecompositionModal({
         )}
       </div>
 
-      {/* Subtask list */}
-      <div className="space-y-4">
-        {subtasks.map((subtask, index) => (
-          <SubtaskRow
-            key={subtask.id}
-            subtask={subtask}
-            index={index}
-            onUpdate={(updates) => handleUpdateSubtask(subtask.id, updates)}
-            onRemove={() => handleRemoveSubtask(subtask.id)}
-            canRemove={subtasks.length > 1}
-          />
-        ))}
-      </div>
+      {/* Error message */}
+      {error && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+          {error}
+        </div>
+      )}
 
-      {/* Add button */}
-      <button
-        onClick={handleAddSubtask}
-        className="mt-4 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
-      >
-        + Add subtask
-      </button>
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="py-12 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto mb-3"></div>
+          <p className="text-sm text-gray-500">Generating AI suggestions...</p>
+        </div>
+      ) : (
+        <>
+          {/* Subtask list */}
+          <div className="space-y-4">
+            {subtasks.map((subtask, index) => (
+              <SubtaskRow
+                key={subtask.id}
+                subtask={subtask}
+                index={index}
+                onUpdate={(updates) => handleUpdateSubtask(subtask.id, updates)}
+                onRemove={() => handleRemoveSubtask(subtask.id)}
+                canRemove={subtasks.length > 1}
+              />
+            ))}
+          </div>
+
+          {/* Add button */}
+          <button
+            onClick={handleAddSubtask}
+            className="mt-4 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+          >
+            + Add subtask
+          </button>
+        </>
+      )}
     </Modal>
   );
 }

@@ -284,6 +284,8 @@ export default function WeeklyPlanningPage() {
         title: string;
         estimatedMinutes: TimeEstimate;
         definitionOfDone: string;
+        rationale?: string;
+        llmGenerated?: boolean;
       }>
     ) => {
       if (!decompositionData) return;
@@ -299,6 +301,8 @@ export default function WeeklyPlanningPage() {
             title: s.title,
             estimatedMinutes: s.estimatedMinutes,
             definitionOfDone: s.definitionOfDone,
+            llmGenerated: s.llmGenerated ?? false,
+            llmRationale: s.rationale,
           });
           createdSubtasks.push(created);
         } catch (error) {
