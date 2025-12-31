@@ -88,13 +88,15 @@ export const SubtaskSchema = SubtaskCreateSchema.extend({
 });
 
 // TimeBlock Schemas
-export const TimeBlockCreateSchema = z.object({
+const TimeBlockBaseSchema = z.object({
   subtaskId: z.string().uuid('Invalid subtask ID'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:MM format'),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'End time must be in HH:MM format'),
   status: TimeBlockStatusSchema.optional().default('scheduled'),
-}).refine((data) => {
+});
+
+export const TimeBlockCreateSchema = TimeBlockBaseSchema.refine((data) => {
   // Validate that endTime is after startTime
   const [startHour, startMin] = data.startTime.split(':').map(Number);
   const [endHour, endMin] = data.endTime.split(':').map(Number);
@@ -128,17 +130,19 @@ export const TimeBlockUpdateSchema = z.object({
   path: ['endTime'],
 });
 
-export const TimeBlockSchema = TimeBlockCreateSchema.extend({
+export const TimeBlockSchema = TimeBlockBaseSchema.extend({
   id: z.string(),
 });
 
 // ExternalEvent Schemas
-export const ExternalEventCreateSchema = z.object({
+const ExternalEventBaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title must be 500 characters or less'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:MM format'),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'End time must be in HH:MM format'),
-}).refine((data) => {
+});
+
+export const ExternalEventCreateSchema = ExternalEventBaseSchema.refine((data) => {
   // Validate that endTime is after startTime
   const [startHour, startMin] = data.startTime.split(':').map(Number);
   const [endHour, endMin] = data.endTime.split(':').map(Number);
@@ -150,7 +154,7 @@ export const ExternalEventCreateSchema = z.object({
   path: ['endTime'],
 });
 
-export const ExternalEventSchema = ExternalEventCreateSchema.extend({
+export const ExternalEventSchema = ExternalEventBaseSchema.extend({
   id: z.string(),
 });
 
