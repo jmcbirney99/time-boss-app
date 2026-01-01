@@ -514,7 +514,6 @@ export default function WeeklyPlanningPage() {
           onCommitClick={openCommitModal}
           onReplanClick={openReplanModal}
           isMobile={isMobile}
-          userEmail={user?.email || user?.name}
         />
 
         {/* Responsive layout - stacked on mobile, 2-column on desktop */}
