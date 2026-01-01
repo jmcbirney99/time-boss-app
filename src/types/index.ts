@@ -21,6 +21,9 @@ export interface Category {
 // Recurring frequency options
 export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 
+// Priority level for semantic prioritization
+export type PriorityLevel = 'high' | 'medium' | 'low' | 'none';
+
 // External calendar events (from Google Calendar, etc.)
 export interface ExternalEvent {
   id: string;
@@ -40,11 +43,13 @@ export interface BacklogItem {
   description: string;
   status: BacklogItemStatus;
   priorityRank: number;
+  priorityLevel?: PriorityLevel; // Semantic priority (high/medium/low/none)
   subtaskIds: string[];
   // Category (from iOS Reminders lists)
   categoryId?: string;
   // Due date/time (from iOS Reminders)
   dueDate?: string; // "2025-12-15"
+  dueDateEnd?: string; // "2025-12-17" for date ranges
   dueTime?: string; // "14:00"
   // Recurring pattern (from iOS Reminders)
   recurringFrequency?: RecurringFrequency;
@@ -52,6 +57,8 @@ export interface BacklogItem {
   recurringRule?: string; // custom rule like "every 3 months on the second Saturday"
   // Tags (from iOS Reminders hashtags)
   tags?: string[]; // ["financial", "health"]
+  // Completion tracking
+  completedAt?: string; // ISO timestamp when archived/completed
 }
 
 // Subtask status

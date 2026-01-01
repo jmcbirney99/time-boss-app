@@ -5,6 +5,7 @@ export const BacklogItemStatusSchema = z.enum(['backlog', 'decomposed', 'archive
 export const RecurringFrequencySchema = z.enum(['daily', 'weekly', 'monthly', 'yearly', 'custom']);
 export const SubtaskStatusSchema = z.enum(['estimated', 'scheduled', 'in_progress', 'completed', 'overflow', 'deferred']);
 export const TimeBlockStatusSchema = z.enum(['scheduled', 'completed', 'partial']);
+export const PriorityLevelSchema = z.enum(['high', 'medium', 'low', 'none']);
 
 // Category Schema
 export const CategoryCreateSchema = z.object({
@@ -17,13 +18,15 @@ export const CategorySchema = CategoryCreateSchema.extend({
 });
 
 // BacklogItem Schemas
-export const BacklogItemCreateSchema = z.object({
+const BacklogItemBaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title must be 500 characters or less'),
   description: z.string().max(5000, 'Description must be 5000 characters or less').optional().default(''),
   status: BacklogItemStatusSchema.optional().default('backlog'),
   priorityRank: z.number().int().positive().optional(),
+  priorityLevel: PriorityLevelSchema.optional(),
   categoryId: z.string().uuid('Invalid category ID').optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be in YYYY-MM-DD format').optional(),
+  dueDateEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date end must be in YYYY-MM-DD format').optional(),
   dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'Due time must be in HH:MM format').optional(),
   recurringFrequency: RecurringFrequencySchema.optional(),
   recurringInterval: z.number().int().positive().optional(),
@@ -31,25 +34,50 @@ export const BacklogItemCreateSchema = z.object({
   tags: z.array(z.string().min(1)).optional(),
 });
 
+export const BacklogItemCreateSchema = BacklogItemBaseSchema.refine((data) => {
+  // Validate that dueDateEnd >= dueDate if both are provided
+  if (data.dueDate && data.dueDateEnd) {
+    return data.dueDateEnd >= data.dueDate;
+  }
+  return true;
+}, {
+  message: 'Due date end must be on or after due date',
+  path: ['dueDateEnd'],
+});
+
 export const BacklogItemUpdateSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title must be 500 characters or less').optional(),
   description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
   status: BacklogItemStatusSchema.optional(),
   priorityRank: z.number().int().positive().optional(),
+  priorityLevel: PriorityLevelSchema.nullable().optional(),
   categoryId: z.string().uuid('Invalid category ID').nullable().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be in YYYY-MM-DD format').nullable().optional(),
+  dueDateEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date end must be in YYYY-MM-DD format').nullable().optional(),
   dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'Due time must be in HH:MM format').nullable().optional(),
   recurringFrequency: RecurringFrequencySchema.nullable().optional(),
   recurringInterval: z.number().int().positive().nullable().optional(),
   recurringRule: z.string().max(500).nullable().optional(),
   tags: z.array(z.string().min(1)).nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
 }).refine((data) => Object.keys(data).length > 0, {
   message: 'At least one field must be provided for update',
+}).refine((data) => {
+  // Validate that dueDateEnd >= dueDate if both are provided
+  if (data.dueDate && data.dueDateEnd) {
+    return data.dueDateEnd >= data.dueDate;
+  }
+  return true;
+}, {
+  message: 'Due date end must be on or after due date',
+  path: ['dueDateEnd'],
 });
 
-export const BacklogItemSchema = BacklogItemCreateSchema.extend({
+export const BacklogItemSchema = BacklogItemBaseSchema.extend({
   id: z.string(),
+  priorityRank: z.number().int().positive(), // Override to make required when reading
   subtaskIds: z.array(z.string()),
+  completedAt: z.string().datetime().optional(),
 });
 
 // Subtask Schemas
@@ -80,6 +108,7 @@ export const SubtaskUpdateSchema = z.object({
 
 export const SubtaskSchema = SubtaskCreateSchema.extend({
   id: z.string(),
+  definitionOfDone: z.string().default(''), // Override to ensure always a string
   scheduledBlockId: z.string().nullable(),
   actualMinutes: z.number().int().positive().optional(),
   completedAt: z.string().datetime().optional(),
@@ -171,6 +200,9 @@ export const WeeklyPlanSchema = WeeklyPlanCreateSchema.extend({
   totalCapacityMinutes: z.number(),
   scheduledMinutes: z.number(),
   overflowSubtaskIds: z.array(z.string()),
+  // Override to just optional (not nullable) since we convert null to undefined
+  committedAt: z.string().datetime().optional(),
+  reflectionNotes: z.string().max(5000).optional(),
 });
 
 // User/Profile Schemas
@@ -231,6 +263,8 @@ export const DailyReviewSchema = DailyReviewCreateSchema.extend({
 });
 
 // Export TypeScript types derived from schemas
+export type PriorityLevel = z.infer<typeof PriorityLevelSchema>;
+
 export type BacklogItemCreate = z.infer<typeof BacklogItemCreateSchema>;
 export type BacklogItemUpdate = z.infer<typeof BacklogItemUpdateSchema>;
 export type BacklogItem = z.infer<typeof BacklogItemSchema>;

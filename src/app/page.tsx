@@ -21,6 +21,8 @@ import { WeekOverview } from '@/components/week/WeekOverview';
 import { TimelineOverlay } from '@/components/timeline/TimelineOverlay';
 import { DecompositionModal } from '@/components/modals/DecompositionModal';
 import { OverflowModal } from '@/components/modals/OverflowModal';
+import { CommitConfirmationModal } from '@/components/modals/CommitConfirmationModal';
+import { ReplanConfirmationModal } from '@/components/modals/ReplanConfirmationModal';
 
 import { useCapacityCalculation } from '@/hooks/useCapacityCalculation';
 import { useModalState } from '@/hooks/useModalState';
@@ -127,11 +129,18 @@ export default function WeeklyPlanningPage() {
   const {
     isDecompositionOpen,
     isOverflowOpen,
+    isCommitOpen,
+    isReplanOpen,
     decompositionData,
     openDecompositionModal,
     openOverflowModal,
+    openCommitModal,
+    openReplanModal,
     closeModal,
   } = useModalState();
+
+  // Commit/replan loading state
+  const [isCommitting, setIsCommitting] = useState(false);
 
   // Get overflow items for the modal
   const overflowItems = useMemo(() => {
@@ -144,6 +153,60 @@ export default function WeeklyPlanningPage() {
       };
     });
   }, [subtasks, backlogItems]);
+
+  // Calculate commit modal data
+  const commitModalData = useMemo(() => {
+    const scheduledSubtasks = subtasks.filter((s) => s.status === 'scheduled');
+    const scheduledMinutes = scheduledSubtasks.reduce((sum, s) => sum + s.estimatedMinutes, 0);
+    const scheduledBacklogIds = new Set(scheduledSubtasks.map((s) => s.backlogItemId));
+    const unscheduledItems = backlogItems.filter(
+      (b) => b.status === 'backlog' || (b.status === 'decomposed' && !scheduledBacklogIds.has(b.id))
+    );
+    const topUnscheduledItems = [...unscheduledItems]
+      .sort((a, b) => a.priorityRank - b.priorityRank)
+      .slice(0, 5);
+
+    return {
+      scheduledMinutes,
+      scheduledTaskCount: scheduledBacklogIds.size,
+      unscheduledBacklogCount: unscheduledItems.length,
+      topUnscheduledItems,
+    };
+  }, [subtasks, backlogItems]);
+
+  // Handle commit
+  const handleCommit = useCallback(async () => {
+    setIsCommitting(true);
+    try {
+      await appData.weeklyPlan.upsert({
+        weekStartDate: weekStartStr,
+        status: 'committed',
+        committedAt: new Date().toISOString(),
+      });
+      closeModal();
+    } catch (error) {
+      console.error('Commit failed:', error);
+    } finally {
+      setIsCommitting(false);
+    }
+  }, [appData.weeklyPlan, closeModal, weekStartStr]);
+
+  // Handle replan
+  const handleReplan = useCallback(async () => {
+    setIsCommitting(true);
+    try {
+      await appData.weeklyPlan.upsert({
+        weekStartDate: weekStartStr,
+        status: 'planning',
+        committedAt: undefined,
+      });
+      closeModal();
+    } catch (error) {
+      console.error('Replan failed:', error);
+    } finally {
+      setIsCommitting(false);
+    }
+  }, [appData.weeklyPlan, closeModal, weekStartStr]);
 
   // Handle scheduling a subtask to a day (system auto-assigns time)
   const handleScheduleToDay = useCallback(
@@ -266,6 +329,12 @@ export default function WeeklyPlanningPage() {
     setActiveId(null);
 
     if (!over) return;
+
+    // Block modifications when committed
+    if (appData.weeklyPlan.weeklyPlan?.status === 'committed') {
+      console.log('Plan is committed. Re-plan to make changes.');
+      return;
+    }
 
     const subtaskId = active.id as string;
     const targetId = over.id as string;
@@ -437,6 +506,9 @@ export default function WeeklyPlanningPage() {
               ? () => openOverflowModal(overflowItems.map((o) => o.subtask.id))
               : undefined
           }
+          planStatus={appData.weeklyPlan.weeklyPlan?.status ?? 'planning'}
+          onCommitClick={openCommitModal}
+          onReplanClick={openReplanModal}
         />
 
         {/* 2-column responsive layout */}
@@ -507,6 +579,24 @@ export default function WeeklyPlanningPage() {
           overflowMinutes={capacity.overflowMinutes}
           overflowItems={overflowItems}
           onResolve={handleOverflowResolve}
+        />
+
+        <CommitConfirmationModal
+          isOpen={isCommitOpen}
+          onClose={closeModal}
+          onConfirm={handleCommit}
+          scheduledMinutes={commitModalData.scheduledMinutes}
+          scheduledTaskCount={commitModalData.scheduledTaskCount}
+          unscheduledBacklogCount={commitModalData.unscheduledBacklogCount}
+          topUnscheduledItems={commitModalData.topUnscheduledItems}
+          isLoading={isCommitting}
+        />
+
+        <ReplanConfirmationModal
+          isOpen={isReplanOpen}
+          onClose={closeModal}
+          onConfirm={handleReplan}
+          isLoading={isCommitting}
         />
       </div>
     </DndContext>

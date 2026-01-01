@@ -25,16 +25,16 @@ export const POST = withAuth(async (request, user) => {
   let body;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch {
     return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
   try {
     body = CategoryCreateSchema.parse(body);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return badRequest('Validation failed', err.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
     return badRequest('Invalid input');
   }

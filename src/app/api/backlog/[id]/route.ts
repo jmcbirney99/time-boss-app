@@ -1,12 +1,12 @@
-
 import { NextResponse } from 'next/server';
-import { withAuth, badRequest, serverError , getServerClient } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError, getServerClient } from '@/lib/api-utils';
 import { BacklogItemUpdateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
+import type { User } from '@supabase/supabase-js';
 
 export const GET = withAuth(async (
-  request,
-  user,
+  _request: Request,
+  _user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -28,8 +28,8 @@ export const GET = withAuth(async (
 });
 
 export const PUT = withAuth(async (
-  request,
-  user,
+  request: Request,
+  _user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -38,16 +38,16 @@ export const PUT = withAuth(async (
   let body;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch {
     return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
   try {
     body = BacklogItemUpdateSchema.parse(body);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return badRequest('Validation failed', err.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
     return badRequest('Invalid input');
   }
@@ -58,13 +58,16 @@ export const PUT = withAuth(async (
   if (body.description !== undefined) updateData.description = body.description;
   if (body.status !== undefined) updateData.status = body.status;
   if (body.priorityRank !== undefined) updateData.priority_rank = body.priorityRank;
+  if (body.priorityLevel !== undefined) updateData.priority_level = body.priorityLevel;
   if (body.categoryId !== undefined) updateData.category_id = body.categoryId;
   if (body.dueDate !== undefined) updateData.due_date = body.dueDate;
+  if (body.dueDateEnd !== undefined) updateData.due_date_end = body.dueDateEnd;
   if (body.dueTime !== undefined) updateData.due_time = body.dueTime;
   if (body.recurringFrequency !== undefined) updateData.recurring_frequency = body.recurringFrequency;
   if (body.recurringInterval !== undefined) updateData.recurring_interval = body.recurringInterval;
   if (body.recurringRule !== undefined) updateData.recurring_rule = body.recurringRule;
   if (body.tags !== undefined) updateData.tags = body.tags;
+  if (body.completedAt !== undefined) updateData.completed_at = body.completedAt;
 
   const { data, error } = await supabase
     .from('backlog_items')
@@ -80,8 +83,8 @@ export const PUT = withAuth(async (
 });
 
 export const DELETE = withAuth(async (
-  request,
-  user,
+  _request: Request,
+  _user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;

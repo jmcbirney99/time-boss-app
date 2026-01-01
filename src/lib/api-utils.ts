@@ -19,7 +19,7 @@ export function badRequest(message: string, details?: unknown): NextResponse<Api
       error: {
         message,
         code: 'BAD_REQUEST',
-        ...(details && { details }),
+        ...(details !== undefined ? { details } : {}),
       },
     },
     { status: 400 }
@@ -56,26 +56,12 @@ export function serverError(message = 'Internal server error', details?: unknown
       error: {
         message,
         code: 'INTERNAL_ERROR',
-        ...(details && { details }),
+        ...(details !== undefined ? { details } : {}),
       },
     },
     { status: 500 }
   );
 }
-
-// Type for route handlers without params
-type SimpleRouteHandler = (request: Request, user: User) => Promise<NextResponse>;
-
-// Type for route handlers with params
-type ParamRouteHandler<T = unknown> = (
-  request: Request,
-  user: User,
-  context: T
-) => Promise<NextResponse>;
-
-// Overloaded function signatures
-export function withAuth(handler: SimpleRouteHandler): (request: Request) => Promise<NextResponse>;
-export function withAuth<T>(handler: ParamRouteHandler<T>): (request: Request, context: T) => Promise<NextResponse>;
 
 // Check if we're in dev bypass mode
 export function isDevBypass(): boolean {
@@ -129,6 +115,21 @@ async function getOrCreateDevUser(): Promise<User> {
   return cachedDevUser;
 }
 
+// Type for route handlers without params
+type SimpleRouteHandler = (request: Request, user: User) => Promise<NextResponse>;
+
+// Type for route handlers with params
+type ParamRouteHandler<T = unknown> = (
+  request: Request,
+  user: User,
+  context: T
+) => Promise<NextResponse>;
+
+// Overloaded function signatures
+export function withAuth(handler: SimpleRouteHandler): (request: Request) => Promise<NextResponse>;
+export function withAuth<T>(handler: ParamRouteHandler<T>): (request: Request, context: T) => Promise<NextResponse>;
+
+// Implementation
 export function withAuth<T = unknown>(
   handler: SimpleRouteHandler | ParamRouteHandler<T>
 ) {

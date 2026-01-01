@@ -37,6 +37,22 @@ function nullToUndefined<T>(value: T | null | undefined): T | undefined {
   return value === null ? undefined : value;
 }
 
+// Helper to normalize datetime strings to ISO 8601 format with Z suffix
+// PostgreSQL returns timestamps like "2025-12-31T12:00:00.000+00:00" but Zod expects "Z"
+function normalizeDateTime(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  // Replace +00:00 with Z for Zod compatibility
+  return value.replace(/\+00:00$/, 'Z');
+}
+
+// Helper to normalize time strings to HH:MM format
+// PostgreSQL returns time as "HH:MM:SS" but schema expects "HH:MM"
+function normalizeTime(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  // Take only first 5 characters (HH:MM)
+  return value.slice(0, 5);
+}
+
 // Transform database snake_case to TypeScript camelCase with Zod validation
 function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
   const transformed = {
@@ -45,14 +61,17 @@ function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
     description: item.description || '',
     status: item.status,
     priorityRank: nullToUndefined(item.priority_rank as number | null),
+    priorityLevel: nullToUndefined(item.priority_level as string | null),
     subtaskIds: ((item.subtasks as Array<{ id: string }> | undefined) || []).map(s => s.id),
     categoryId: nullToUndefined(item.category_id as string | null),
     dueDate: nullToUndefined(item.due_date as string | null),
-    dueTime: nullToUndefined(item.due_time as string | null),
+    dueDateEnd: nullToUndefined(item.due_date_end as string | null),
+    dueTime: normalizeTime(item.due_time as string | null),
     recurringFrequency: nullToUndefined(item.recurring_frequency as string | null),
     recurringInterval: nullToUndefined(item.recurring_interval as number | null),
     recurringRule: nullToUndefined(item.recurring_rule as string | null),
     tags: nullToUndefined(item.tags as string[] | null),
+    completedAt: nullToUndefined(item.completed_at as string | null),
   };
 
   return BacklogItemSchema.parse(transformed);
@@ -121,8 +140,8 @@ function transformWeeklyPlan(item: Record<string, unknown>): WeeklyPlan {
     totalCapacityMinutes: 0, // Calculated on frontend
     scheduledMinutes: 0, // Calculated on frontend
     overflowSubtaskIds: [],
-    committedAt: item.committed_at,
-    reflectionNotes: (item.reflection_notes as { notes?: string } | undefined)?.notes,
+    committedAt: normalizeDateTime(item.committed_at as string | null),
+    reflectionNotes: nullToUndefined((item.reflection_notes as { notes?: string } | null)?.notes),
   };
 
   return WeeklyPlanSchema.parse(transformed);

@@ -35,14 +35,18 @@ create table if not exists backlog_items (
   description text,
   status text default 'backlog' check (status in ('backlog', 'decomposed', 'archived')),
   priority_rank integer not null,
+  priority_level text check (priority_level in ('high', 'medium', 'low', 'none')),
   category_id uuid references categories(id) on delete set null,
   due_date date,
+  due_date_end date,
   due_time time,
   recurring_frequency text check (recurring_frequency in ('daily', 'weekly', 'monthly', 'yearly', 'custom')),
   recurring_interval integer,
   recurring_rule text,
   tags text[],
-  created_at timestamp with time zone default now()
+  created_at timestamp with time zone default now(),
+  completed_at timestamp with time zone,
+  constraint check_date_range check (due_date_end is null or due_date_end >= due_date)
 );
 
 -- Subtasks

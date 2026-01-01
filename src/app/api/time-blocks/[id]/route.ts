@@ -1,12 +1,12 @@
-
 import { NextResponse } from 'next/server';
-import { withAuth, badRequest, serverError , getServerClient } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError, getServerClient } from '@/lib/api-utils';
 import { TimeBlockUpdateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
+import type { User } from '@supabase/supabase-js';
 
 export const GET = withAuth(async (
-  request,
-  user,
+  _request: Request,
+  user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -32,8 +32,8 @@ export const GET = withAuth(async (
 });
 
 export const PUT = withAuth(async (
-  request,
-  user,
+  request: Request,
+  user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -42,16 +42,16 @@ export const PUT = withAuth(async (
   let body;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch {
     return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
   try {
     body = TimeBlockUpdateSchema.parse(body);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return badRequest('Validation failed', err.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
     return badRequest('Invalid input');
   }
@@ -77,8 +77,8 @@ export const PUT = withAuth(async (
 });
 
 export const DELETE = withAuth(async (
-  request,
-  user,
+  _request: Request,
+  user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;

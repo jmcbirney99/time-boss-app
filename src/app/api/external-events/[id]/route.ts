@@ -1,10 +1,10 @@
-
 import { NextResponse } from 'next/server';
-import { withAuth, serverError , getServerClient } from '@/lib/api-utils';
+import { withAuth, serverError, getServerClient } from '@/lib/api-utils';
+import type { User } from '@supabase/supabase-js';
 
 export const DELETE = withAuth(async (
-  request,
-  user,
+  _request: Request,
+  user: User,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;

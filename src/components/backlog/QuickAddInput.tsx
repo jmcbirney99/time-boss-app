@@ -24,7 +24,7 @@ export function QuickAddInput({ onAdd }: QuickAddInputProps) {
       await onAdd(trimmed);
       setTitle('');
       inputRef.current?.focus();
-    } catch (err) {
+    } catch {
       setError('Failed to add task');
     } finally {
       setIsLoading(false);
