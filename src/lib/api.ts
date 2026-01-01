@@ -45,6 +45,14 @@ function normalizeDateTime(value: string | null | undefined): string | undefined
   return value.replace(/\+00:00$/, 'Z');
 }
 
+// Helper to normalize time strings to HH:MM format
+// PostgreSQL returns time as "HH:MM:SS" but schema expects "HH:MM"
+function normalizeTime(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  // Take only first 5 characters (HH:MM)
+  return value.slice(0, 5);
+}
+
 // Transform database snake_case to TypeScript camelCase with Zod validation
 function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
   const transformed = {
@@ -58,7 +66,7 @@ function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
     categoryId: nullToUndefined(item.category_id as string | null),
     dueDate: nullToUndefined(item.due_date as string | null),
     dueDateEnd: nullToUndefined(item.due_date_end as string | null),
-    dueTime: nullToUndefined(item.due_time as string | null),
+    dueTime: normalizeTime(item.due_time as string | null),
     recurringFrequency: nullToUndefined(item.recurring_frequency as string | null),
     recurringInterval: nullToUndefined(item.recurring_interval as number | null),
     recurringRule: nullToUndefined(item.recurring_rule as string | null),
