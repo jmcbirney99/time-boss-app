@@ -2,7 +2,9 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { TodayView } from '@/components/today/TodayView';
+import { TaskBoundaryModal } from '@/components/modals/TaskBoundaryModal';
 import { useBacklog, useSubtasks, useTimeBlocks } from '@/hooks/useData';
+import { useTimeBlockBoundary } from '@/hooks/useTimeBlockBoundary';
 import { formatDateKey } from '@/lib/dateUtils';
 import * as api from '@/lib/api';
 import type { Subtask, TimeBlock, BacklogItem } from '@/types';
@@ -13,9 +15,9 @@ export default function TodayPage() {
   const todayDateKey = formatDateKey(today);
 
   // Fetch data from API
-  const { backlog: backlogItems, loading: backlogLoading } = useBacklog();
-  const { subtasks: apiSubtasks, loading: subtasksLoading } = useSubtasks();
-  const { timeBlocks: apiTimeBlocks, loading: timeBlocksLoading } = useTimeBlocks(todayDateKey, todayDateKey);
+  const { backlog: backlogItems, loading: backlogLoading, refresh: refreshBacklog } = useBacklog();
+  const { subtasks: apiSubtasks, loading: subtasksLoading, refresh: refreshSubtasks } = useSubtasks();
+  const { timeBlocks: apiTimeBlocks, loading: timeBlocksLoading, refresh: refreshTimeBlocks } = useTimeBlocks(todayDateKey, todayDateKey);
 
   // Local state for optimistic updates
   const [localSubtasks, setLocalSubtasks] = useState<Subtask[]>([]);
@@ -44,6 +46,20 @@ export default function TodayPage() {
   const todayBlocks = useMemo(() => {
     return localTimeBlocks.filter((block) => block.date === todayDateKey);
   }, [localTimeBlocks, todayDateKey]);
+
+  // Time block boundary detection
+  const { endedBlock, clearEndedBlock } = useTimeBlockBoundary(todayBlocks);
+
+  // Find the subtask and parent item for the ended block
+  const endedBlockSubtask = useMemo(() => {
+    if (!endedBlock) return null;
+    return localSubtasks.find((s) => s.id === endedBlock.subtaskId) || null;
+  }, [endedBlock, localSubtasks]);
+
+  const endedBlockParentItem = useMemo(() => {
+    if (!endedBlockSubtask) return undefined;
+    return backlogItems.find((item) => item.id === endedBlockSubtask.backlogItemId);
+  }, [endedBlockSubtask, backlogItems]);
 
   const handleMarkComplete = useCallback(async (subtaskId: string) => {
     // Optimistic update
@@ -85,6 +101,155 @@ export default function TodayPage() {
     }
   }, []);
 
+  // Handler for marking complete from the boundary modal (with optional actual time)
+  const handleBoundaryMarkComplete = useCallback(async (actualMinutes?: number) => {
+    if (!endedBlockSubtask || !endedBlock) return;
+
+    const subtaskId = endedBlockSubtask.id;
+
+    // Optimistic update
+    setLocalSubtasks((prev) =>
+      prev.map((s) =>
+        s.id === subtaskId
+          ? {
+              ...s,
+              status: 'completed' as const,
+              completedAt: new Date().toISOString(),
+              actualMinutes: actualMinutes,
+            }
+          : s
+      )
+    );
+
+    // Update time block status
+    setLocalTimeBlocks((prev) =>
+      prev.map((b) =>
+        b.id === endedBlock.id
+          ? { ...b, status: 'completed' as const }
+          : b
+      )
+    );
+
+    setCompletedSubtaskIds((prev) => {
+      const next = new Set(Array.from(prev));
+      next.add(subtaskId);
+      return next;
+    });
+
+    // Persist to API
+    try {
+      await Promise.all([
+        api.updateSubtask(subtaskId, {
+          status: 'completed',
+          completedAt: new Date().toISOString(),
+          actualMinutes: actualMinutes,
+        }),
+        api.updateTimeBlock(endedBlock.id, {
+          status: 'completed',
+        }),
+      ]);
+    } catch (error) {
+      console.error('Failed to mark subtask complete:', error);
+      // Rollback optimistic updates
+      setLocalSubtasks((prev) =>
+        prev.map((s) =>
+          s.id === subtaskId
+            ? { ...s, status: 'scheduled' as const, completedAt: undefined, actualMinutes: undefined }
+            : s
+        )
+      );
+      setLocalTimeBlocks((prev) =>
+        prev.map((b) =>
+          b.id === endedBlock.id
+            ? { ...b, status: 'scheduled' as const }
+            : b
+        )
+      );
+      setCompletedSubtaskIds((prev) => {
+        const next = new Set(Array.from(prev));
+        next.delete(subtaskId);
+        return next;
+      });
+    }
+  }, [endedBlockSubtask, endedBlock]);
+
+  // Handler for creating a follow-up task from the boundary modal
+  const handleCreateFollowUp = useCallback(async (progressNote: string, remainingWork: string) => {
+    if (!endedBlockSubtask || !endedBlock) return;
+
+    const originalSubtaskId = endedBlockSubtask.id;
+
+    // Update the original subtask to partial status with progress note
+    const originalUpdate = {
+      status: 'completed' as const, // Mark as completed but with progress note
+      completedAt: new Date().toISOString(),
+      progressNote: progressNote,
+    };
+
+    // Optimistic update for original subtask
+    setLocalSubtasks((prev) =>
+      prev.map((s) =>
+        s.id === originalSubtaskId
+          ? { ...s, ...originalUpdate }
+          : s
+      )
+    );
+
+    // Update time block to partial
+    setLocalTimeBlocks((prev) =>
+      prev.map((b) =>
+        b.id === endedBlock.id
+          ? { ...b, status: 'partial' as const }
+          : b
+      )
+    );
+
+    // Persist original subtask and time block updates, then create follow-up
+    try {
+      await Promise.all([
+        api.updateSubtask(originalSubtaskId, originalUpdate),
+        api.updateTimeBlock(endedBlock.id, { status: 'partial' }),
+      ]);
+
+      // Create the follow-up subtask
+      const followUpSubtask = await api.createSubtask({
+        backlogItemId: endedBlockSubtask.backlogItemId,
+        title: `[Follow-up] ${remainingWork}`,
+        definitionOfDone: `Complete remaining work: ${remainingWork}`,
+        estimatedMinutes: endedBlockSubtask.estimatedMinutes, // Same estimate as original
+        status: 'estimated',
+        parentSubtaskId: originalSubtaskId,
+      });
+
+      // Add the follow-up to local state
+      setLocalSubtasks((prev) => [...prev, followUpSubtask]);
+
+      // Refresh data to ensure everything is in sync
+      await Promise.all([
+        refreshSubtasks(),
+        refreshTimeBlocks(),
+        refreshBacklog(),
+      ]);
+    } catch (error) {
+      console.error('Failed to create follow-up:', error);
+      // Rollback optimistic updates
+      setLocalSubtasks((prev) =>
+        prev.map((s) =>
+          s.id === originalSubtaskId
+            ? { ...s, status: 'scheduled' as const, completedAt: undefined, progressNote: undefined }
+            : s
+        )
+      );
+      setLocalTimeBlocks((prev) =>
+        prev.map((b) =>
+          b.id === endedBlock.id
+            ? { ...b, status: 'scheduled' as const }
+            : b
+        )
+      );
+    }
+  }, [endedBlockSubtask, endedBlock, refreshSubtasks, refreshTimeBlocks, refreshBacklog]);
+
   const handleReschedule = useCallback((subtaskId: string) => {
     // In a real app, this would open a reschedule modal
     console.log(`Reschedule subtask ${subtaskId}`);
@@ -115,6 +280,19 @@ export default function TodayPage() {
         onMarkComplete={handleMarkComplete}
         onReschedule={handleReschedule}
       />
+
+      {/* Time Block Boundary Modal */}
+      {endedBlock && endedBlockSubtask && (
+        <TaskBoundaryModal
+          isOpen={!!endedBlock}
+          onClose={clearEndedBlock}
+          block={endedBlock}
+          subtask={endedBlockSubtask}
+          parentItem={endedBlockParentItem}
+          onMarkComplete={handleBoundaryMarkComplete}
+          onCreateFollowUp={handleCreateFollowUp}
+        />
+      )}
     </div>
   );
 }
