@@ -37,6 +37,14 @@ function nullToUndefined<T>(value: T | null | undefined): T | undefined {
   return value === null ? undefined : value;
 }
 
+// Helper to normalize datetime strings to ISO 8601 format with Z suffix
+// PostgreSQL returns timestamps like "2025-12-31T12:00:00.000+00:00" but Zod expects "Z"
+function normalizeDateTime(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  // Replace +00:00 with Z for Zod compatibility
+  return value.replace(/\+00:00$/, 'Z');
+}
+
 // Transform database snake_case to TypeScript camelCase with Zod validation
 function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
   const transformed = {
@@ -124,7 +132,7 @@ function transformWeeklyPlan(item: Record<string, unknown>): WeeklyPlan {
     totalCapacityMinutes: 0, // Calculated on frontend
     scheduledMinutes: 0, // Calculated on frontend
     overflowSubtaskIds: [],
-    committedAt: nullToUndefined(item.committed_at as string | null),
+    committedAt: normalizeDateTime(item.committed_at as string | null),
     reflectionNotes: nullToUndefined((item.reflection_notes as { notes?: string } | null)?.notes),
   };
 

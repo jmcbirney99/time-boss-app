@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-type ModalType = 'decomposition' | 'overflow' | null;
+type ModalType = 'decomposition' | 'overflow' | 'commit' | 'replan' | null;
 
 interface DecompositionData {
   backlogItemId: string;
@@ -37,6 +37,14 @@ export function useModalState() {
     });
   }, []);
 
+  const openCommitModal = useCallback(() => {
+    setModalState({ type: 'commit', data: null });
+  }, []);
+
+  const openReplanModal = useCallback(() => {
+    setModalState({ type: 'replan', data: null });
+  }, []);
+
   const closeModal = useCallback(() => {
     setModalState({ type: null, data: null });
   }, []);
@@ -45,10 +53,14 @@ export function useModalState() {
     modalState,
     isDecompositionOpen: modalState.type === 'decomposition',
     isOverflowOpen: modalState.type === 'overflow',
+    isCommitOpen: modalState.type === 'commit',
+    isReplanOpen: modalState.type === 'replan',
     decompositionData: modalState.type === 'decomposition' ? (modalState.data as DecompositionData) : null,
     overflowData: modalState.type === 'overflow' ? (modalState.data as OverflowData) : null,
     openDecompositionModal,
     openOverflowModal,
+    openCommitModal,
+    openReplanModal,
     closeModal,
   };
 }
