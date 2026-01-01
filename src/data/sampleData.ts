@@ -496,6 +496,66 @@ export const subtasks: Subtask[] = [
     status: 'overflow',
     scheduledBlockId: null,
   },
+
+  // =============================================================================
+  // COMPLETED SUBTASKS - Historical data for calibration testing
+  // Shows pattern where user tends to underestimate by ~20%
+  // =============================================================================
+  {
+    id: 'subtask_test_001',
+    backlogItemId: 'backlog_001',
+    title: 'Review last month financial summary',
+    definitionOfDone: 'Summary reviewed, notes taken',
+    estimatedMinutes: 30,
+    status: 'completed',
+    scheduledBlockId: null,
+    actualMinutes: 40, // Took 33% longer
+    completedAt: '2025-12-08T10:30:00Z',
+  },
+  {
+    id: 'subtask_test_002',
+    backlogItemId: 'backlog_001',
+    title: 'Set up budget spreadsheet template',
+    definitionOfDone: 'Template created with categories',
+    estimatedMinutes: 45,
+    status: 'completed',
+    scheduledBlockId: null,
+    actualMinutes: 55, // Took 22% longer
+    completedAt: '2025-12-08T14:00:00Z',
+  },
+  {
+    id: 'subtask_test_003',
+    backlogItemId: 'backlog_009',
+    title: 'Research plumbing options online',
+    definitionOfDone: 'Options researched, decision made',
+    estimatedMinutes: 20,
+    status: 'completed',
+    scheduledBlockId: null,
+    actualMinutes: 25, // Took 25% longer
+    completedAt: '2025-12-09T09:15:00Z',
+  },
+  {
+    id: 'subtask_test_004',
+    backlogItemId: 'backlog_016',
+    title: 'Organize health folder structure',
+    definitionOfDone: 'Folder structure created',
+    estimatedMinutes: 15,
+    status: 'completed',
+    scheduledBlockId: null,
+    actualMinutes: 18, // Took 20% longer
+    completedAt: '2025-12-09T11:45:00Z',
+  },
+  {
+    id: 'subtask_test_005',
+    backlogItemId: 'backlog_021',
+    title: 'Initial AI workflow brainstorm',
+    definitionOfDone: 'List of workflows to document',
+    estimatedMinutes: 30,
+    status: 'completed',
+    scheduledBlockId: null,
+    actualMinutes: 35, // Took 17% longer
+    completedAt: '2025-12-10T08:30:00Z',
+  },
 ];
 
 // =============================================================================
