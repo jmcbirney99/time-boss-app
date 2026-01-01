@@ -11,13 +11,25 @@ interface BacklogItemProps {
   item: BacklogItemType;
   subtaskCount: number;
   onDecomposeClick: () => void;
+  onClick?: () => void;
 }
 
-export function BacklogItem({ item, subtaskCount, onDecomposeClick }: BacklogItemProps) {
+export function BacklogItem({ item, subtaskCount, onDecomposeClick, onClick }: BacklogItemProps) {
   const isDecomposed = item.status === 'decomposed';
 
   return (
-    <div className="backlog-card">
+    <div
+      className="backlog-card cursor-pointer hover:border-sage-300 hover:shadow-sm transition-all"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium text-gray-900 truncate">{item.title}</h3>
@@ -34,7 +46,14 @@ export function BacklogItem({ item, subtaskCount, onDecomposeClick }: BacklogIte
             {subtaskCount} subtask{subtaskCount !== 1 ? 's' : ''}
           </span>
         ) : (
-          <Button variant="ghost" size="sm" onClick={onDecomposeClick}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDecomposeClick();
+            }}
+          >
             Break Down
           </Button>
         )}
