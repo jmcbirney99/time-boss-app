@@ -698,3 +698,26 @@ export function getDayColumns(weekStartDate: string): DayColumn[] {
     };
   });
 }
+
+/**
+ * Get incomplete subtasks for a given date
+ * A subtask is considered incomplete if:
+ * - It has a scheduled block for that date
+ * - Its status is 'scheduled' (not 'completed')
+ */
+export function getIncompleteSubtasksForDate(
+  date: string,
+  allTimeBlocks: TimeBlock[],
+  allSubtasks: Subtask[]
+): Subtask[] {
+  // Get all blocks for the given date
+  const dateBlocks = allTimeBlocks.filter(b => b.date === date);
+
+  // Get subtask IDs from those blocks
+  const subtaskIdsForDate = new Set(dateBlocks.map(b => b.subtaskId));
+
+  // Return subtasks that were scheduled for that date but not completed
+  return allSubtasks.filter(
+    s => subtaskIdsForDate.has(s.id) && s.status === 'scheduled'
+  );
+}
