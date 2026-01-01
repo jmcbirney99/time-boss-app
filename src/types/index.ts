@@ -2,6 +2,7 @@
 export interface User {
   id: string;
   name: string;
+  email?: string; // From auth, optional
   workHours: {
     start: string; // "08:00"
     end: string;   // "17:00"

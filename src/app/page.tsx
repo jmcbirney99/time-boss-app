@@ -16,6 +16,7 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 import { TopBar } from '@/components/layout/TopBar';
 import { BacklogList } from '@/components/backlog/BacklogList';
+import { TaskDetailModal } from '@/components/backlog/TaskDetailModal';
 import { DraggableSubtask } from '@/components/backlog/BacklogItem';
 import { WeekOverview } from '@/components/week/WeekOverview';
 import { TimelineOverlay } from '@/components/timeline/TimelineOverlay';
@@ -91,6 +92,9 @@ export default function WeeklyPlanningPage() {
 
   // Expanded day for timeline view (toggle behavior)
   const [expandedDayId, setExpandedDayId] = useState<string | null>(null);
+
+  // Selected task for detail modal
+  const [selectedTask, setSelectedTask] = useState<BacklogItem | null>(null);
 
   // Mobile detection
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -509,13 +513,19 @@ export default function WeeklyPlanningPage() {
           planStatus={appData.weeklyPlan.weeklyPlan?.status ?? 'planning'}
           onCommitClick={openCommitModal}
           onReplanClick={openReplanModal}
+          isMobile={isMobile}
+          userEmail={user?.email || user?.name}
         />
 
-        {/* 2-column responsive layout */}
-        <div className="flex-1 p-4 md:p-6">
-          <div className="grid grid-cols-[minmax(100px,25%)_1fr] md:grid-cols-[300px_1fr] gap-4 md:gap-6 h-[calc(100vh-140px)]">
-            {/* Column 1: Backlog */}
-            <div className="overflow-hidden">
+        {/* Responsive layout - stacked on mobile, 2-column on desktop */}
+        <div className="flex-1 p-4 md:p-6 overflow-hidden">
+          <div className={`h-[calc(100vh-140px)] ${
+            isMobile
+              ? 'flex flex-col gap-4'
+              : 'grid grid-cols-[300px_1fr] gap-6'
+          }`}>
+            {/* Column 1: Backlog - collapsible on mobile */}
+            <div className={`flex flex-col min-h-0 ${isMobile ? 'max-h-[40vh]' : ''}`}>
               <BacklogList
                 backlogItems={backlogItems}
                 subtasks={subtasks}
@@ -523,11 +533,12 @@ export default function WeeklyPlanningPage() {
                 onAddItem={async (title) => {
                   await appData.backlog.create({ title });
                 }}
+                onItemClick={(item) => setSelectedTask(item)}
               />
             </div>
 
             {/* Column 2: Week Overview with inline drawers */}
-            <div className="overflow-hidden">
+            <div className={`overflow-hidden ${isMobile ? 'flex-1 min-h-0' : ''}`}>
               <WeekOverview
                 days={updatedDayColumns}
                 expandedDayId={expandedDayId}
@@ -597,6 +608,20 @@ export default function WeeklyPlanningPage() {
           onClose={closeModal}
           onConfirm={handleReplan}
           isLoading={isCommitting}
+        />
+
+        <TaskDetailModal
+          isOpen={selectedTask !== null}
+          onClose={() => setSelectedTask(null)}
+          task={selectedTask}
+          categories={appData.categories.categories || []}
+          subtasks={subtasks}
+          onDelete={async (taskId) => {
+            await appData.backlog.remove(taskId);
+          }}
+          onDecompose={(taskId) => {
+            openDecompositionModal(taskId);
+          }}
         />
       </div>
     </DndContext>
