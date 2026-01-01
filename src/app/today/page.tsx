@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { TodayView } from '@/components/today/TodayView';
 import { TaskBoundaryModal } from '@/components/modals/TaskBoundaryModal';
 import { DailyReviewModal } from '@/components/modals/DailyReviewModal';
+import { TimeLoggingModal } from '@/components/modals/TimeLoggingModal';
 import { useBacklog, useSubtasks, useTimeBlocks } from '@/hooks/useData';
 import { useTimeBlockBoundary } from '@/hooks/useTimeBlockBoundary';
 import { formatDateKey } from '@/lib/dateUtils';
@@ -36,6 +37,10 @@ export default function TodayPage() {
   const [localTimeBlocks, setLocalTimeBlocks] = useState<TimeBlock[]>([]);
   const [completedSubtaskIds, setCompletedSubtaskIds] = useState<Set<string>>(new Set());
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // Time logging modal state (M6)
+  const [timeLoggingSubtask, setTimeLoggingSubtask] = useState<Subtask | null>(null);
+  const [timeLoggingBlock, setTimeLoggingBlock] = useState<TimeBlock | null>(null);
 
   // Sync API data to local state
   useEffect(() => {
@@ -115,12 +120,29 @@ export default function TodayPage() {
     }).filter((item) => item.subtask);
   }, [todayBlocks, localSubtasks, backlogItems]);
 
-  const handleMarkComplete = useCallback(async (subtaskId: string) => {
+  // Opens the time logging modal instead of completing immediately (M6)
+  const handleMarkComplete = useCallback((subtaskId: string) => {
+    const subtask = localSubtasks.find((s) => s.id === subtaskId);
+    const block = localTimeBlocks.find((b) => b.subtaskId === subtaskId);
+
+    if (subtask) {
+      setTimeLoggingSubtask(subtask);
+      setTimeLoggingBlock(block || null);
+    }
+  }, [localSubtasks, localTimeBlocks]);
+
+  // Called when user logs time in the modal (M6)
+  const handleTimeLogged = useCallback(async (actualMinutes: number) => {
+    if (!timeLoggingSubtask) return;
+
+    const subtaskId = timeLoggingSubtask.id;
+    const completedAt = new Date().toISOString();
+
     // Optimistic update
     setLocalSubtasks((prev) =>
       prev.map((s) =>
         s.id === subtaskId
-          ? { ...s, status: 'completed' as const, completedAt: new Date().toISOString() }
+          ? { ...s, status: 'completed' as const, actualMinutes, completedAt }
           : s
       )
     );
@@ -131,11 +153,16 @@ export default function TodayPage() {
       return next;
     });
 
+    // Close the modal
+    setTimeLoggingSubtask(null);
+    setTimeLoggingBlock(null);
+
     // Persist to API
     try {
       await api.updateSubtask(subtaskId, {
         status: 'completed',
-        completedAt: new Date().toISOString(),
+        actualMinutes,
+        completedAt,
       });
     } catch (error) {
       console.error('Failed to mark subtask complete:', error);
@@ -143,7 +170,7 @@ export default function TodayPage() {
       setLocalSubtasks((prev) =>
         prev.map((s) =>
           s.id === subtaskId
-            ? { ...s, status: 'scheduled' as const, completedAt: undefined }
+            ? { ...s, status: 'scheduled' as const, actualMinutes: undefined, completedAt: undefined }
             : s
         )
       );
@@ -153,6 +180,11 @@ export default function TodayPage() {
         return next;
       });
     }
+  }, [timeLoggingSubtask]);
+
+  const handleCloseTimeLoggingModal = useCallback(() => {
+    setTimeLoggingSubtask(null);
+    setTimeLoggingBlock(null);
   }, []);
 
   // Handler for marking complete from the boundary modal (with optional actual time) - M5
@@ -438,6 +470,15 @@ export default function TodayPage() {
           onCreateFollowUp={handleCreateFollowUp}
         />
       )}
+
+      {/* Time Logging Modal - M6 */}
+      <TimeLoggingModal
+        subtask={timeLoggingSubtask}
+        timeBlock={timeLoggingBlock}
+        isOpen={timeLoggingSubtask !== null}
+        onClose={handleCloseTimeLoggingModal}
+        onLogTime={handleTimeLogged}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { TaskCard, EmptyTodayState } from './TaskCard';
 import { Button } from '@/components/ui/Button';
 import type { TimeBlock, Subtask, BacklogItem } from '@/types';
 import { formatFullDate, timeToMinutes } from '@/lib/dateUtils';
+import { getCalibrationStats } from '@/lib/calibration';
 import Link from 'next/link';
 
 interface TodayViewProps {
@@ -48,6 +49,9 @@ export function TodayView({
     const subtask = getSubtask(b.subtaskId);
     return subtask && completedSubtaskIds.has(subtask.id);
   }).length;
+
+  // Calculate calibration stats from all subtasks
+  const calibrationStats = getCalibrationStats(subtasks);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -104,6 +108,29 @@ export function TodayView({
             </div>
             <span className="text-sm text-gray-600">
               {completedTasks} of {totalTasks} completed
+            </span>
+          </div>
+        )}
+
+        {/* Calibration insight - shown after 3+ completed tasks with time data */}
+        {calibrationStats.hasEnoughData && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+            <svg
+              className="w-4 h-4 text-sage-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            <span>{calibrationStats.insight}</span>
+            <span className="text-gray-400">
+              (based on {calibrationStats.completedCount} tasks)
             </span>
           </div>
         )}
