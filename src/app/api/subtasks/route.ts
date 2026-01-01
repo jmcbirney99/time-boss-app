@@ -1,11 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { withAuth, badRequest, notFound, serverError } from '@/lib/api-utils';
+import { withAuth, badRequest, notFound, serverError, getServerClient } from '@/lib/api-utils';
 import { SubtaskCreateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
 export const GET = withAuth(async (request, user) => {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   const { searchParams } = new URL(request.url);
   const backlogItemId = searchParams.get('backlogItemId');
@@ -31,7 +30,7 @@ export const GET = withAuth(async (request, user) => {
 });
 
 export const POST = withAuth(async (request, user) => {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   let body;
   try {

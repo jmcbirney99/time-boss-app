@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
+
 import { NextResponse } from 'next/server';
-import { withAuth, badRequest, serverError } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError , getServerClient } from '@/lib/api-utils';
 import { WeeklyPlanCreateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
 export const GET = withAuth(async (request, user) => {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   const { searchParams } = new URL(request.url);
   const weekStartDate = searchParams.get('weekStartDate');
@@ -30,7 +30,7 @@ export const GET = withAuth(async (request, user) => {
 });
 
 export const POST = withAuth(async (request, user) => {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   let body;
   try {

@@ -2,15 +2,17 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import { BacklogItem, DraggableSubtask } from './BacklogItem';
+import { QuickAddInput } from './QuickAddInput';
 import type { BacklogItem as BacklogItemType, Subtask } from '@/types';
 
 interface BacklogListProps {
   backlogItems: BacklogItemType[];
   subtasks: Subtask[];
   onDecomposeClick: (backlogItemId: string) => void;
+  onAddItem: (title: string) => Promise<void>;
 }
 
-export function BacklogList({ backlogItems, subtasks, onDecomposeClick }: BacklogListProps) {
+export function BacklogList({ backlogItems, subtasks, onDecomposeClick, onAddItem }: BacklogListProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: 'backlog-drop-zone',
     data: { type: 'backlog' },
@@ -108,6 +110,8 @@ export function BacklogList({ backlogItems, subtasks, onDecomposeClick }: Backlo
           <p className="text-sm">No items in backlog</p>
         </div>
       )}
+
+      <QuickAddInput onAdd={onAddItem} />
     </div>
   );
 }

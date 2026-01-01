@@ -32,6 +32,11 @@ async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// Helper to convert null to undefined (Zod optional expects undefined, not null)
+function nullToUndefined<T>(value: T | null | undefined): T | undefined {
+  return value === null ? undefined : value;
+}
+
 // Transform database snake_case to TypeScript camelCase with Zod validation
 function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
   const transformed = {
@@ -39,15 +44,15 @@ function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
     title: item.title,
     description: item.description || '',
     status: item.status,
-    priorityRank: item.priority_rank,
+    priorityRank: nullToUndefined(item.priority_rank as number | null),
     subtaskIds: ((item.subtasks as Array<{ id: string }> | undefined) || []).map(s => s.id),
-    categoryId: item.category_id,
-    dueDate: item.due_date,
-    dueTime: item.due_time,
-    recurringFrequency: item.recurring_frequency,
-    recurringInterval: item.recurring_interval,
-    recurringRule: item.recurring_rule,
-    tags: item.tags,
+    categoryId: nullToUndefined(item.category_id as string | null),
+    dueDate: nullToUndefined(item.due_date as string | null),
+    dueTime: nullToUndefined(item.due_time as string | null),
+    recurringFrequency: nullToUndefined(item.recurring_frequency as string | null),
+    recurringInterval: nullToUndefined(item.recurring_interval as number | null),
+    recurringRule: nullToUndefined(item.recurring_rule as string | null),
+    tags: nullToUndefined(item.tags as string[] | null),
   };
 
   return BacklogItemSchema.parse(transformed);

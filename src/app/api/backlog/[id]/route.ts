@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
+
 import { NextResponse } from 'next/server';
-import { withAuth, badRequest, serverError } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError , getServerClient } from '@/lib/api-utils';
 import { BacklogItemUpdateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
@@ -10,7 +10,7 @@ export const GET = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   const { data, error } = await supabase
     .from('backlog_items')
@@ -33,7 +33,7 @@ export const PUT = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   let body;
   try {
@@ -85,7 +85,7 @@ export const DELETE = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   const { error } = await supabase
     .from('backlog_items')

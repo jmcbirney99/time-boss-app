@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
+
 import { NextResponse } from 'next/server';
-import { withAuth, badRequest, serverError } from '@/lib/api-utils';
+import { withAuth, badRequest, serverError , getServerClient } from '@/lib/api-utils';
 import { TimeBlockUpdateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
@@ -10,7 +10,7 @@ export const GET = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   const { data, error } = await supabase
     .from('time_blocks')
@@ -37,7 +37,7 @@ export const PUT = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   let body;
   try {
@@ -82,7 +82,7 @@ export const DELETE = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   // Get the subtask ID before deleting
   const { data: block } = await supabase

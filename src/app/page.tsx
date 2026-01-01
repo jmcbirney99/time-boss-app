@@ -448,6 +448,9 @@ export default function WeeklyPlanningPage() {
                 backlogItems={backlogItems}
                 subtasks={subtasks}
                 onDecomposeClick={openDecompositionModal}
+                onAddItem={async (title) => {
+                  await appData.backlog.create({ title });
+                }}
               />
             </div>
 

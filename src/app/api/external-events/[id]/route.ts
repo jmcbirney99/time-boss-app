@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
+
 import { NextResponse } from 'next/server';
-import { withAuth, serverError } from '@/lib/api-utils';
+import { withAuth, serverError , getServerClient } from '@/lib/api-utils';
 
 export const DELETE = withAuth(async (
   request,
@@ -8,7 +8,7 @@ export const DELETE = withAuth(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getServerClient();
 
   const { error } = await supabase
     .from('external_events')
