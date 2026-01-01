@@ -3,7 +3,7 @@ import { withAuth, badRequest, serverError, getServerClient } from '@/lib/api-ut
 import { BacklogItemCreateSchema } from '@/lib/schemas';
 import { ZodError } from 'zod';
 
-export const GET = withAuth(async (request, user) => {
+export const GET = withAuth(async (_request, _user) => {
   const supabase = await getServerClient();
 
   const { data, error } = await supabase
@@ -26,16 +26,16 @@ export const POST = withAuth(async (request, user) => {
   let body;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch {
     return badRequest('Invalid JSON in request body');
   }
 
   // Validate input with Zod
   try {
     body = BacklogItemCreateSchema.parse(body);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return badRequest('Validation failed', error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return badRequest('Validation failed', err.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })));
     }
     return badRequest('Invalid input');
   }
@@ -58,8 +58,10 @@ export const POST = withAuth(async (request, user) => {
       description: body.description || null,
       status: body.status || 'backlog',
       priority_rank: body.priorityRank ?? nextRank,
+      priority_level: body.priorityLevel || null,
       category_id: body.categoryId || null,
       due_date: body.dueDate || null,
+      due_date_end: body.dueDateEnd || null,
       due_time: body.dueTime || null,
       recurring_frequency: body.recurringFrequency || null,
       recurring_interval: body.recurringInterval || null,

@@ -45,14 +45,17 @@ function transformBacklogItem(item: Record<string, unknown>): BacklogItem {
     description: item.description || '',
     status: item.status,
     priorityRank: nullToUndefined(item.priority_rank as number | null),
+    priorityLevel: nullToUndefined(item.priority_level as string | null),
     subtaskIds: ((item.subtasks as Array<{ id: string }> | undefined) || []).map(s => s.id),
     categoryId: nullToUndefined(item.category_id as string | null),
     dueDate: nullToUndefined(item.due_date as string | null),
+    dueDateEnd: nullToUndefined(item.due_date_end as string | null),
     dueTime: nullToUndefined(item.due_time as string | null),
     recurringFrequency: nullToUndefined(item.recurring_frequency as string | null),
     recurringInterval: nullToUndefined(item.recurring_interval as number | null),
     recurringRule: nullToUndefined(item.recurring_rule as string | null),
     tags: nullToUndefined(item.tags as string[] | null),
+    completedAt: nullToUndefined(item.completed_at as string | null),
   };
 
   return BacklogItemSchema.parse(transformed);
@@ -121,8 +124,8 @@ function transformWeeklyPlan(item: Record<string, unknown>): WeeklyPlan {
     totalCapacityMinutes: 0, // Calculated on frontend
     scheduledMinutes: 0, // Calculated on frontend
     overflowSubtaskIds: [],
-    committedAt: item.committed_at,
-    reflectionNotes: (item.reflection_notes as { notes?: string } | undefined)?.notes,
+    committedAt: nullToUndefined(item.committed_at as string | null),
+    reflectionNotes: nullToUndefined((item.reflection_notes as { notes?: string } | null)?.notes),
   };
 
   return WeeklyPlanSchema.parse(transformed);
