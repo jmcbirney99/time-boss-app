@@ -2,6 +2,7 @@
 
 import { OverflowBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { UserMenu } from './UserMenu';
 import Link from 'next/link';
 
 interface TopBarProps {
@@ -16,7 +17,6 @@ interface TopBarProps {
   onCommitClick?: () => void;
   onReplanClick?: () => void;
   isMobile?: boolean;
-  userEmail?: string | null;
 }
 
 export function TopBar({
@@ -31,7 +31,6 @@ export function TopBar({
   onCommitClick,
   onReplanClick,
   isMobile = false,
-  userEmail,
 }: TopBarProps) {
   return (
     <header className="bg-white border-b border-paper-border px-4 md:px-6 py-3 md:py-4">
@@ -149,22 +148,9 @@ export function TopBar({
             </div>
           )}
 
-          {/* User indicator */}
-          {userEmail && (
-            <>
-              <div className="h-6 w-px bg-paper-border hidden md:block" />
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-sage-500 flex items-center justify-center text-white text-xs md:text-sm font-medium">
-                  {userEmail.charAt(0).toUpperCase()}
-                </div>
-                {!isMobile && (
-                  <span className="text-sm text-stone-600 max-w-[150px] truncate">
-                    {userEmail}
-                  </span>
-                )}
-              </div>
-            </>
-          )}
+          {/* User menu */}
+          <div className="h-6 w-px bg-paper-border hidden md:block" />
+          <UserMenu />
         </div>
       </div>
     </header>
