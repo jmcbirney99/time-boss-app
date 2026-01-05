@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Active Milestone:** Milestone 3 - Weekly Commit Flow
-**Last Updated:** 2024-12-31
+**All Core Milestones Complete**
+**Last Updated:** 2025-01-01
 
 ---
 
@@ -11,79 +11,102 @@
 
 ### Milestone 1: Data Foundation ✅
 **Status:** Complete
-**Completed:** 2024-12-31
 
 Data persists, weekly planning works end-to-end.
 
 **What was built:**
-- Supabase database with full schema (profiles, categories, backlog_items, subtasks, time_blocks, external_events, weekly_plans)
-- Row Level Security (RLS) policies for all tables
+- Supabase database with full schema
+- Row Level Security (RLS) policies
 - Email magic link authentication
-- API routes for all entities (CRUD operations)
-- React hooks for data fetching (`useAppData`, `useBacklog`, `useSubtasks`, etc.)
-- Main page wired to real data with optimistic updates
-
-**Key files:**
-- `supabase/schema.sql` - Database schema and RLS
-- `src/lib/supabase/` - Supabase client configuration
-- `src/app/api/` - All API routes
-- `src/hooks/useData.ts` - Data fetching hooks
-- `src/lib/api.ts` - Client-side API wrapper
+- API routes for all entities
+- React hooks for data fetching
 
 ---
 
 ### Milestone 2: LLM Decomposition ✅
 **Status:** Complete
-**Completed:** 2024-12-31
 
 AI-powered task breakdown into schedulable subtasks.
 
 **What was built:**
-- Anthropic SDK integration for Claude API calls
-- `/api/decompose` endpoint that calls Claude claude-sonnet-4-20250514
-- DecompositionModal with loading spinner and error handling
-- LLM-generated subtasks with title, definitionOfDone, estimatedMinutes, rationale
-- Subtasks marked with `llmGenerated: true` and `llmRationale` when saved
-
-**Key files:**
-- `src/app/api/decompose/route.ts` - Claude API integration
-- `src/components/modals/DecompositionModal.tsx` - Updated with API calls
+- Anthropic SDK integration for Claude API
+- `/api/decompose` endpoint
+- DecompositionModal with loading/error handling
+- LLM-generated subtasks with rationale
 
 ---
 
-### Milestone 3: Weekly Commit Flow ⏳
-**Status:** Not Started
+### Milestone 3: Weekly Commit Flow ✅
+**Status:** Complete
 
 Weekly planning commitment workflow.
 
-**Goal:** User commits to a weekly plan, can't modify committed items without explicit "re-plan" action.
+**What was built:**
+- CommitConfirmationModal - shows what you're committing to
+- ReplanConfirmationModal - unlocks for modifications
+- TopBar shows "Commit Plan" or "Committed" badge
+- weeklyPlan API persists status to database
+- Drag-and-drop disabled when committed
 
 ---
 
-### Milestone 4: Daily Review ⏳
-**Status:** Not Started
+### Milestone 3.5: UX Foundations ✅
+**Status:** Complete
 
-End-of-day review and overflow handling.
+Core UX fixes discovered via Playwright audit.
 
-**Goal:** Daily review flow to mark tasks complete/incomplete and handle overflow.
-
----
-
-### Milestone 5: Time Block Boundaries ⏳
-**Status:** Not Started
-
-Respect calendar and work hour constraints.
-
-**Goal:** Time blocks respect external events and work hours, visual timeline shows conflicts.
+**What was built:**
+- Mobile responsive layout
+- Visible scroll indicators
+- Backlog card click expansion
+- Quick add task input
 
 ---
 
-### Milestone 6: Calibration Loop ⏳
-**Status:** Not Started
+### Milestone 4: Daily Review ✅
+**Status:** Complete
+
+Morning review for incomplete tasks from yesterday.
+
+**What was built:**
+- DailyReviewModal - review yesterday's incomplete tasks
+- Reschedule, defer, or delete options
+- Today's schedule preview
+- Notes field for daily planning
+
+---
+
+### Milestone 5: Time Block Boundaries ✅
+**Status:** Complete
+
+Real-time detection when time blocks end.
+
+**What was built:**
+- useTimeBlockBoundary hook - detects ended blocks
+- TaskBoundaryModal - prompts for completion status
+- Mark complete with actual time logging
+- Create follow-up task for partial completion
+- VoiceInput component for notes
+
+---
+
+### Milestone 6: Calibration Loop ✅
+**Status:** Complete
 
 Estimation accuracy feedback loop.
 
-**Goal:** Track actual vs estimated time, surface calibration insights.
+**What was built:**
+- TimeLoggingModal - log actual time spent
+- calibration.ts - calculate estimation accuracy
+- Calibration insights in TodayView
+- actualMinutes tracked on subtasks
+
+---
+
+## Remaining Work
+
+### Pending Todos
+- **006-pending-auth-ui-indicators** (p2) - Show login status in header, login/logout navigation
 
 ---
 
